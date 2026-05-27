@@ -161,8 +161,13 @@ void DesenhaTijolos(Tijolo tijolos[], int quantidade) {
 int main(void) {
     InitWindow(LARGURA, ALTURA, "ARKANOID");
 
+    InitAudioDevice();
+
+    Music musica = LoadMusicStream("musica_maneira.mp3");
     Texture2D imgInicio = LoadTexture("fundoinicio.png");
     Texture2D imgJogo = LoadTexture("fundojogo.png");
+
+    PlayMusicStream(musica);
 
     SetTargetFPS(60);
 
@@ -225,6 +230,7 @@ int main(void) {
             if (tela == 0) {
                 DrawTexture(imgInicio, 0, 0, WHITE);
                 DesenhaMenu(selecionada);
+                UpdateMusicStream(musica);
             }
 
             if (tela == 1) {
@@ -236,6 +242,9 @@ int main(void) {
                 DesenhaJogador(jogador);
                 DesenhaTijolos(tijolos, QTDTIJOLOS);
 
+            if (IsKeyPressed(KEY_P)) {
+                tela = 0;
+            }
 
             }
         EndDrawing();
@@ -243,6 +252,8 @@ int main(void) {
 
     UnloadTexture(imgInicio);
     UnloadTexture(imgJogo);
+    UnloadMusicStream(musica);
+    CloseAudioDevice();
     CloseWindow();
     return 0;
 }
