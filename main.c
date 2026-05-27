@@ -1,105 +1,195 @@
 #include <raylib.h>
 #include <stdio.h>
 #include <math.h>
+
 #define ALTURA 660
 #define LARGURA 640
 #define TAMANHO_FONTE 40
 #define OPCOES 4
 
 #define RAIOBOLA 8
-#define ALTURAPLATAFORMA 12
-#define VELOCIDADEPLATAFORMA 5.0f
+#define ALTPLATAFORMA 12
+#define VELPLATAFORMA 5.0f
+#define QTDTIJOLOS 20
 
-void DesenhaMenu(int selecionada){ //cria a função desenha menu
-    char opcoes[OPCOES][20]={
+typedef struct {
+    float x;
+    float y;
+    float larg;
+} Plataforma;
+
+typedef struct {
+    float x;
+    float y;
+    float dx;
+    float dy;
+    int ativa;
+} Bola;
+
+typedef struct {
+    float x;
+    float y;
+    float alt;
+    float larg;
+    char tipo;
+    int ativo;
+
+} Tijolo;
+
+typedef struct {
+    int vidas;
+    int pontos;
+} Jogador;
+
+void DesenhaMenu(int selecionada) {
+    char opcoes[OPCOES][20] = {
         "NOVO JOGO",
         "CARREGAR JOGO",
         "OPCOES",
         "SAIR"
-       };
-    int espacamento=75;
-    int yinicial=220; //parâmetros de espaçamento e altura inicial
-    for(int i=0; i < OPCOES; i++){ //faz com que a opção onde eu estou tenha [] nas pontas e as outras não
+    };
+    int espacamento = 75;
+    int yinicial = 220;
+    for (int i = 0; i < OPCOES; i++) {
         char texto[30];
-        if (i == selecionada){
+        if (i == selecionada) {
             sprintf(texto, "[ %s ]", opcoes[i]);
-        }else{
+        } else {
             sprintf(texto, "%s", opcoes[i]);
         }
-        int larguratexto = MeasureText(texto, TAMANHO_FONTE); //função que centraliza o texto na tela
+        int larguratexto = MeasureText(texto, TAMANHO_FONTE);
         int x = (LARGURA - larguratexto) / 2;
         int y = yinicial + i * espacamento;
-        DrawText(texto, x, y, TAMANHO_FONTE, BLUE); //desenha o texto na cor que eu pedi, na altura e no espaçamento que vá ficar centralizado
+        DrawText(texto, x, y, TAMANHO_FONTE, BLUE);
     }
 }
-void DesenhaPlataforma(float plat_x, float plat_y, float plat_larg){ //função que desenha a plataforma que pega a bolinha
-    DrawRectangle(plat_x, plat_y, plat_larg, ALTURAPLATAFORMA, YELLOW);
+
+void DesenhaPlataforma(Plataforma plat) {
+    DrawRectangle(plat.x, plat.y, plat.larg, ALTPLATAFORMA, YELLOW);
 }
-void DesenhaBola(float bola_x, float bola_y){
-    DrawCircle(bola_x, bola_y, RAIOBOLA, BLUE); //função que desenha a bolinha
+
+void DesenhaBola(Bola bola) {
+    DrawCircle(bola.x, bola.y, RAIOBOLA, BLUE);
 }
-void MovePlataforma(float *plat_x, float plat_larg){ //função que move a plataforma
-    if (IsKeyDown(KEY_LEFT))*plat_x -= VELOCIDADEPLATAFORMA; //move para esquerda
-    if (IsKeyDown(KEY_RIGHT))*plat_x += VELOCIDADEPLATAFORMA; // move para direita
-    if (*plat_x < 0) *plat_x = 0; //limita que a plataforma não pode entrar para a tela na esquerda, vai bater na parede e ficar na tela
-    if (*plat_x > (LARGURA - plat_larg)) *plat_x = LARGURA - plat_larg; //limita que a plataforma não pode entrar para a tela na direita, vai bater na parede e ficar na tela
+
+void DesenhaJogador(Jogador jogador){
+DrawText(TextFormat("Vidas: %d Pontos: %d", jogador.vidas, jogador.pontos), 20, 10, 20, WHITE);
 }
-void MoveBola(float *bola_x, float *bola_y, float *bola_dx, float *bola_dy, float *plat_x, float plat_y, float plat_larg, int *bola_ativa){ //função que move a bola
-    if (*bola_ativa == 1){
-        *bola_x += *bola_dx; //atualiza a posição da bola na tela
-        *bola_y += *bola_dy;
-        if (*bola_x - RAIOBOLA <= 0 || *bola_x + RAIOBOLA >= LARGURA) *bola_dx = -*bola_dx; //faz com que tenha colisão com as paredes laterais
-        if (*bola_y - RAIOBOLA <= 0) *bola_dy = -*bola_dy; //faz com que tenha colisão com o teto
-        if (*bola_y + RAIOBOLA >= plat_y && *bola_y + RAIOBOLA <= plat_y + ALTURAPLATAFORMA && *bola_x >= *plat_x && *bola_x <= *plat_x + plat_larg && *bola_dy > 0){
-            float ponto_colisao = (*bola_x - *plat_x) / plat_larg;
-            float velocidade = sqrt((*bola_dx)*(*bola_dx) + (*bola_dy)*(*bola_dy)); //mantém a velocidade da bola constante
-            float angulo = (ponto_colisao - 0.5f) * 2.0f; //calcula o angulo
-            *bola_dx = velocidade * angulo; //define direção horizontal
-            *bola_dy = -fabs(velocidade * (1 - fabs(angulo))); //faz com que a bola suba depois de bater na plataforma
-            *bola_y = plat_y - RAIOBOLA; //evita que a bola atravesse a plataforma
+
+void MovePlataforma(Plataforma *plat) {
+    if (IsKeyDown(KEY_LEFT)) plat->x -= VELPLATAFORMA;
+    if (IsKeyDown(KEY_RIGHT)) plat->x += VELPLATAFORMA;
+
+    if (plat->x < 0) plat->x = 0;
+    if (plat->x > (LARGURA - plat->larg)) plat->x = LARGURA - plat->larg;
+}
+
+void MoveBola(Bola *bola, Plataforma *plat) {
+    if (bola->ativa == 1) {
+        bola->x += bola->dx;
+        bola->y += bola->dy;
+
+        if (bola->x - RAIOBOLA <= 0 || bola->x + RAIOBOLA >= LARGURA) bola->dx = -bola->dx;
+        if (bola->y - RAIOBOLA <= 0) bola->dy = -bola->dy;
+
+
+        if (bola->y + RAIOBOLA >= plat->y && bola->y + RAIOBOLA <= plat->y + ALTPLATAFORMA &&
+            bola->x >= plat->x && bola->x <= plat->x + plat->larg && bola->dy > 0) {
+
+            float ponto_colisao = (bola->x - plat->x) / plat->larg;
+            float velocidade = sqrt((bola->dx) * (bola->dx) + (bola->dy) * (bola->dy));
+            float angulo = (ponto_colisao - 0.5f) * 2.0f;
+
+            bola->dx = velocidade * angulo;
+            bola->dy = -fabs(velocidade * (1 - fabs(angulo)));
+            bola->y = plat->y - RAIOBOLA;
         }
-        if (*bola_y > ALTURA){ //se cair a bola perde ela, e reseta a posição da plataforma e da bola para ir de novo
-            *bola_ativa = 0;
-            *plat_x = 270.0f;
-            *bola_dx = 3.0f;
-            *bola_dy = -3.0f;
-            *bola_x = *plat_x + plat_larg / 2.0f;
-            *bola_y = plat_y - RAIOBOLA;
+
+        if (bola->y > ALTURA) {
+            bola->ativa = 0;
+            plat->x = 270.0f;
+            bola->dx = 3.0f;
+            bola->dy = -3.0f;
+            bola->x = plat->x + plat->larg / 2.0f;
+            bola->y = plat->y - RAIOBOLA;
         }
     }
-int main(void){
-    InitWindow(LARGURA, ALTURA, "ARKANOID"); //inicializa a primeira tela(menu inicial) no tamanho que eu pedi
-    Texture2D inicio = LoadTexture("fundoinicio.png"); //foto do fundo do menu
-    Texture2D jogoo = LoadTexture("fundojogo.png"); //foto do fundo do jogo
-    SetTargetFPS(60); //imagens por segundo
-    int selecionada=0; //faz com que comece em novo jogo
+}
+
+void InicializaTijolos(Tijolo tijolos[QTDTIJOLOS], int quantidade) {
+    int area_largura = 560;
+    int area_altura = 200;
+    int inicio_area_x = 40;
+    int inicio_area_y = 60;
+
+    int colunas = 5;
+    int linhas = 4;
+
+    int largura_tijolo = area_largura / colunas;
+    int altura_tijolo = area_altura / linhas;
+    int espacamento = 4;
+
+    int k = 0;
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            tijolos[k].larg = largura_tijolo - espacamento;
+            tijolos[k].alt = altura_tijolo - espacamento;
+            tijolos[k].x = inicio_area_x + (j * largura_tijolo) + espacamento / 2;
+            tijolos[k].y = inicio_area_y + (i * altura_tijolo) + espacamento / 2;
+            tijolos[k].tipo = (i % 3);
+            tijolos[k].ativo = 1;
+
+            k++;
+        }
+    }
+}
+
+
+void DesenhaTijolos(Tijolo tijolos[], int quantidade) {
+    for (int i = 0; i < quantidade; i++) {
+        if (tijolos[i].ativo) {
+            Color corTijolo;
+            switch (tijolos[i].tipo) {
+                case 0: corTijolo = RED; break;
+                case 1: corTijolo = GREEN; break;
+            }
+            DrawRectangle(tijolos[i].x, tijolos[i].y, tijolos[i].larg, tijolos[i].alt, corTijolo);
+        }
+    }
+}
+
+int main(void) {
+    InitWindow(LARGURA, ALTURA, "ARKANOID");
+
+    Texture2D imgInicio = LoadTexture("fundoinicio.png");
+    Texture2D imgJogo = LoadTexture("fundojogo.png");
+
+    SetTargetFPS(60);
+
+    int selecionada = 0;
     int tela = 0;
-    float plat_x = 270.0f;
-    float plat_y = 560.0f;
-    float plat_larg = 100.0f;
-    float bola_x = 320.0f;
-    float bola_y = 550.0f;
-    float bola_dx = 3.0f;
-    float bola_dy = -3.0f;
-    int bola_ativa = 0;
-    while (!WindowShouldClose()){
-        if (tela==0){
-            if(IsKeyPressed(KEY_UP)){
-                selecionada--;//se eu apertei a flecha de cima eu subo pra opção de cima
-                if(selecionada<0){
-                    selecionada=OPCOES-1;//se eu to na primeira opção (0/novo jogo) vai pra última opção (3/sair)
-                }
+
+    Plataforma plataforma = { 270.0f, 560.0f, 100.0f };
+    Bola bola = { 320.0f, 550.0f, 3.0f, -3.0f, 0 };
+    Jogador jogador = { 3, 0 };
+
+    Tijolo tijolos[QTDTIJOLOS];
+    InicializaTijolos(tijolos, QTDTIJOLOS);
+
+    while (!WindowShouldClose()) {
+        if (tela == 0) {
+            if (IsKeyPressed(KEY_UP)) {
+                pointer: selecionada--;
+                if (selecionada < 0) selecionada = OPCOES - 1;
             }
-            if(IsKeyPressed(KEY_DOWN)){
-                selecionada++;//se eu apertei a flecha de baixo eu subo pra opção de baixo
-                if(selecionada>=OPCOES){
-                    selecionada=0;//se eu to na última opção(3/sair) e eu aperto na flecha de baixo, ele sobe para a primeira(0/novo jogo)
-                }
+            if (IsKeyPressed(KEY_DOWN)) {
+                selecionada++;
+                if (selecionada >= OPCOES) selecionada = 0;
             }
-            if (IsKeyPressed(KEY_ENTER)){//faz com que o comando seja executado
-                switch (selecionada){
+            if (IsKeyPressed(KEY_ENTER)) {
+                switch (selecionada) {
                     case 0:
-                        tela=1;
+                        tela = 1;
                         break;
                     case 1:
                         printf("Carregar Jogo selecionado\n");
@@ -114,33 +204,45 @@ int main(void){
                 }
             }
         }
-        if (tela == 1){ //diz o que acontece na tela do novo jogo
-            MovePlataforma(&plat_x, plat_larg);
-            if (bola_ativa == 0){
-                bola_x = plat_x + plat_larg / 2.0f;
-                bola_y = plat_y - RAIOBOLA;
-                if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)){
-                    bola_ativa = 1;
+
+        if (tela == 1) {
+            MovePlataforma(&plataforma);
+
+            if (bola.ativa == 0) {
+                bola.x = plataforma.x + plataforma.larg / 2.0f;
+                bola.y = plataforma.y - RAIOBOLA;
+                if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
+                    bola.ativa = 1;
                 }
             }
-            MoveBola(&bola_x, &bola_y, &bola_dx, &bola_dy, &plat_x, plat_y, plat_larg, &bola_ativa);
-        } 
+
+            MoveBola(&bola, &plataforma);
+        }
+
         BeginDrawing();
-        ClearBackground(BLACK); //fundo preto
-        if(tela==0){
-            DrawTexture(inicio, 0, 0, WHITE);
-            DesenhaMenu(selecionada); //executa a função desenha menu
-        }
-        if (tela == 1){
             ClearBackground(BLACK);
-            DrawTexture(jogoo, 0, 0, WHITE);
-            DesenhaPlataforma(plat_x, plat_y, plat_larg);
-            DesenhaBola(bola_x, bola_y);
-        }
-    EndDrawing();
+
+            if (tela == 0) {
+                DrawTexture(imgInicio, 0, 0, WHITE);
+                DesenhaMenu(selecionada);
+            }
+
+            if (tela == 1) {
+                ClearBackground(BLACK);
+                DrawTexture(imgJogo, 0, 0, WHITE);
+
+                DesenhaPlataforma(plataforma);
+                DesenhaBola(bola);
+                DesenhaJogador(jogador);
+                DesenhaTijolos(tijolos, QTDTIJOLOS);
+
+
+            }
+        EndDrawing();
     }
-    UnloadTexture(inicio);
-    UnloadTexture(jogoo);
+
+    UnloadTexture(imgInicio);
+    UnloadTexture(imgJogo);
     CloseWindow();
     return 0;
 }
