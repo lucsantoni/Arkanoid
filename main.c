@@ -10,7 +10,7 @@
 #define RAIOBOLA 8
 #define ALTPLATAFORMA 12
 #define VELPLATAFORMA 5.0f
-#define QTDTIJOLOS 20
+#define QTDTIJOLOS 375
 
 typedef struct {
     float x;
@@ -31,15 +31,26 @@ typedef struct {
     float y;
     float alt;
     float larg;
-    char tipo;
+    int tipo;
     int ativo;
-
+    int vida;
 } Tijolo;
 
 typedef struct {
     int vidas;
     int pontos;
 } Jogador;
+
+int VidaPorTipo(int tipo) {
+    switch(tipo){
+        case 1: return 1;
+        case 2: return 2;
+        case 3: return 3;
+        case 4: return 4;
+        case 5: return -1;
+        default: return 0;
+    }
+}
 
 void DesenhaMenu(int selecionada) {
     char opcoes[OPCOES][20] = {
@@ -75,6 +86,50 @@ void DesenhaBola(Bola bola) {
 
 void DesenhaJogador(Jogador jogador){
     DrawText(TextFormat("Vidas: %d Pontos: %d", jogador.vidas, jogador.pontos), 20, 10, 20, WHITE);
+}
+
+void InicializaTijolosArquivo(Tijolo t[], const char *arquivo, int colunas, int linhas){
+    FILE *f = fopen(arquivo, "r");
+    if(!f){
+        printf("Erro ao abrir o arquivo %s\n", arquivo);
+        return;
+    }
+
+    int i = 0;
+    int larg = 560 / colunas;
+    int alt = 560 / linhas;
+    int inicio_x = 40;
+    int inicio_y = 160;
+
+    char linha[256];
+    int linha_index = 0;
+    while(fgets(linha, sizeof(linha), f) && linha_index < linhas){
+        char *p = linha;
+        int coluna_index = 0;
+        while(*p && coluna_index < colunas){
+            while(*p == ' ' || *p == '\t') p++;
+            if(*p == '\n' || *p == '\0') break;
+
+            int tipo;
+            if(*p == 'x') tipo = 5;
+            else tipo = *p - '0';
+
+            if(tipo > 0){
+                t[i].x = inicio_x + coluna_index * larg;
+                t[i].y = inicio_y + linha_index * alt;
+                t[i].larg = larg - 5;
+                t[i].alt = alt - 5;
+                t[i].tipo = tipo;
+                t[i].vida = VidaPorTipo(tipo);
+                t[i].ativo = 1;
+                i++;
+            }
+            coluna_index++;
+            p++;
+        }
+        linha_index++;
+    }
+    fclose(f);
 }
 
 void MovePlataforma(Plataforma *plat) {
@@ -151,8 +206,24 @@ void DesenhaTijolos(Tijolo tijolos[], int quantidade) {
         if (tijolos[i].ativo) {
             Color corTijolo;
             switch (tijolos[i].tipo) {
-                case 0: corTijolo = RED; break;
-                case 1: corTijolo = GREEN; break;
+                case 1:
+                    corTijolo = RED;
+                    break;
+                case 2:
+                    corTijolo = ORANGE;
+                    break;
+                case 3:
+                    corTijolo = GREEN;
+                    break;
+                case 4:
+                    corTijolo = BLUE;
+                    break;
+                case 5:
+                    corTijolo = GRAY;
+                    break;
+                default:
+                    corTijolo = WHITE;
+                    break;
             }
             DrawRectangle(tijolos[i].x, tijolos[i].y, tijolos[i].larg, tijolos[i].alt, corTijolo);
         }
@@ -160,23 +231,29 @@ void DesenhaTijolos(Tijolo tijolos[], int quantidade) {
 }
 
 void ColisaoBolaTijolo(Bola *bola, Tijolo tijolos[], int quantidade, Jogador *jogador) {
-
     for (int i = 0; i < quantidade; i++) {
+        if (!tijolos[i].ativo) continue;
 
-        if (tijolos[i].ativo) {
+        float nextX = bola->x + bola->dx;
+        float nextY = bola->y + bola->dy;
+        if(nextX + RAIOBOLA > tijolos[i].x && nextX - RAIOBOLA < tijolos[i].x + tijolos[i].larg &&
+           nextY + RAIOBOLA > tijolos[i].y && nextY - RAIOBOLA < tijolos[i].y + tijolos[i].alt){
 
-            if (bola->x + RAIOBOLA >= tijolos[i].x &&
-                bola->x - RAIOBOLA <= tijolos[i].x + tijolos[i].larg &&
-                bola->y + RAIOBOLA >= tijolos[i].y &&
-                bola->y - RAIOBOLA <= tijolos[i].y + tijolos[i].alt) {
+            int colVertical = 0;
+            if(bola->x < tijolos[i].x || bola->x > tijolos[i].x + tijolos[i].larg)
+                colVertical = 1;
 
-                tijolos[i].ativo = 0;
-
+            if(colVertical)
+                bola->dx = -bola->dx;
+            else
                 bola->dy = -bola->dy;
 
-                jogador->pontos += 100;
-
-                break;
+            if(tijolos[i].tipo != 5){
+                tijolos[i].vida--;
+                if(tijolos[i].vida <= 0){
+                    tijolos[i].ativo = 0;
+                    jogador->pontos += 10;
+                }
             }
         }
     }
@@ -226,7 +303,7 @@ void ReinicializaJogo(Jogador *jogador, Tijolo tijolos[], Plataforma *plat, Bola
     bola->dy = -3.0f;
     bola->ativa = 0;
 
-    InicializaTijolos(tijolos, qtdTijolos);
+    InicializaTijolosArquivo(tijolos, "fase1.txt", 15, 25);
 }
 
 int main(void) {
@@ -251,7 +328,7 @@ int main(void) {
     Jogador jogador = { 3, 0 };
 
     Tijolo tijolos[QTDTIJOLOS]; // array de tijolos
-    InicializaTijolos(tijolos, QTDTIJOLOS); // inicializa os tijolos
+    InicializaTijolosArquivo(tijolos, "fase1.txt", 15, 25); // inicializa os tijolos do arquivo
 
 while (!WindowShouldClose()) {
 
