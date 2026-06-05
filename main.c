@@ -62,11 +62,8 @@ int main(void) {
 
     InitAudioDevice();
 
-    Music musica = LoadMusicStream("midias/musica_maneira.mp3"); //
-    Texture2D imgInicio = LoadTexture("midias/fundoinicio.png"); // 
-    Texture2D imgJogo = LoadTexture("midias/fundojogo.png"); 
-
-    PlayMusicStream(musica);
+    Recursos recursos;
+CarregaRecursos(&recursos);
 
     SetTargetFPS(60);
 
@@ -83,7 +80,7 @@ int main(void) {
 
     while (!WindowShouldClose()) {
 
-        UpdateMusicStream(musica);
+        UpdateMusicStream(recursos.musica);
 
         if (tempoMensagemSave > 0) {
             tempoMensagemSave--;
@@ -147,12 +144,12 @@ int main(void) {
     ClearBackground(BLACK);
 
     if (tela == 0){
-        DrawTexture(imgInicio, 0, 0, WHITE);
+        DrawTexture(recursos.imgInicio, 0, 0, WHITE);
         DesenhaMenu(selecionada);
     }
 
     if (tela == 1){
-        DrawTexture(imgJogo, 0, 0, WHITE);
+        DrawTexture(recursos.imgJogo, 0, 0, WHITE);
         DrawFPS(10, 40);
 
         DesenhaPlataforma(plataforma);
@@ -172,9 +169,7 @@ int main(void) {
     EndDrawing();
     }
     
-    UnloadTexture(imgInicio);
-    UnloadTexture(imgJogo);
-    UnloadMusicStream(musica);
+    DescarregaRecursos(&recursos);
     CloseAudioDevice();
     CloseWindow();
 

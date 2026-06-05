@@ -61,8 +61,7 @@ void SalvaJogo(Jogador jogador, Tijolo tijolos[], int quantidade) {
 void CarregaJogo(Jogador *jogador, Tijolo tijolos[], int quantidade) {
     FILE *arq = fopen("save.bin", "rb");
 
-    if (arq == NULL)
-    {
+    if (arq == NULL){
         printf("Nenhum save encontrado!\n");
         return;
     }
