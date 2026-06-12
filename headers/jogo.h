@@ -34,13 +34,15 @@ void ColisaoBolaTijolo(
 void SalvaJogo(
     Jogador jogador,
     Tijolo tijolos[],
-    int quantidade
+    int quantidade,
+    int fase
 );
 
 void CarregaJogo(
     Jogador *jogador,
     Tijolo tijolos[],
-    int quantidade
+    int quantidade,
+    int *fase
 );
 
 #endif

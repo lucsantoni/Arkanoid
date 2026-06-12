@@ -43,7 +43,7 @@ void ColisaoBolaTijolo(Bola *bola, Tijolo tijolos[], int quantidade, Jogador *jo
 }
 
 
-void SalvaJogo(Jogador jogador, Tijolo tijolos[], int quantidade) {
+void SalvaJogo(Jogador jogador, Tijolo tijolos[], int quantidade, int fase) {
     FILE *arq = fopen("save.bin", "wb");
 
     if (arq == NULL)
@@ -53,12 +53,13 @@ void SalvaJogo(Jogador jogador, Tijolo tijolos[], int quantidade) {
     }
 
     fwrite(&jogador, sizeof(Jogador), 1, arq);
+    fwrite(&fase, sizeof(int), 1, arq);
     fwrite(tijolos, sizeof(Tijolo), quantidade, arq);
 
     fclose(arq);
 }
 
-void CarregaJogo(Jogador *jogador, Tijolo tijolos[], int quantidade) {
+void CarregaJogo(Jogador *jogador, Tijolo tijolos[], int quantidade, int *fase) {
     FILE *arq = fopen("save.bin", "rb");
 
     if (arq == NULL){
@@ -67,6 +68,7 @@ void CarregaJogo(Jogador *jogador, Tijolo tijolos[], int quantidade) {
     }
 
     fread(jogador, sizeof(Jogador), 1, arq);
+    fread(fase, sizeof(int), 1, arq);
     fread(tijolos, sizeof(Tijolo), quantidade, arq);
 
     fclose(arq);

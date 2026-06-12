@@ -13,6 +13,51 @@
 #define OPCOES 4
 
 #define QTDTIJOLOS 90
+#define NUM_FASES 3
+
+static const char *FASES[NUM_FASES] = {
+    "midias/fase1.txt",
+    "midias/fase2.txt",
+    "midias/fase3.txt"
+};
+
+static int faseAtual = 1;
+
+const char *ArquivoFase(int fase) {
+    if (fase < 1) fase = 1;
+    if (fase > NUM_FASES) fase = NUM_FASES;
+    return FASES[fase - 1];
+}
+
+void LimpaTijolos(Tijolo tijolos[], int quantidade) {
+    for (int i = 0; i < quantidade; i++) {
+        tijolos[i].ativo = 0;
+    }
+}
+
+int FaseConcluida(Tijolo tijolos[], int quantidade) {
+    for (int i = 0; i < quantidade; i++) {
+        if (tijolos[i].ativo && tijolos[i].tipo != 5) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void PreparaFase(Tijolo tijolos[], Plataforma *plat, Bola *bola, int fase) {
+    plat->x = 270.0f;
+    plat->y = 560.0f;
+    plat->larg = 100.0f;
+
+    bola->x = plat->x + plat->larg / 2.0f;
+    bola->y = plat->y - RAIOBOLA;
+    bola->dx = 3.0f;
+    bola->dy = -3.0f;
+    bola->ativa = 0;
+
+    LimpaTijolos(tijolos, QTDTIJOLOS);
+    InicializaTijolosArquivo(tijolos, ArquivoFase(fase), 15, 25);
+}
 
 void DesenhaMenu(int selecionada) {
     char opcoes[OPCOES][20] = {
@@ -39,21 +84,12 @@ void DesenhaMenu(int selecionada) {
     }
 }
 
-void ReinicializaJogo(Jogador *jogador, Tijolo tijolos[], Plataforma *plat, Bola *bola, int qtdTijolos) {
+void ReinicializaJogo(Jogador *jogador, Tijolo tijolos[], Plataforma *plat, Bola *bola) {
     jogador->vidas = 3;
     jogador->pontos = 0;
+    faseAtual = 1;
 
-    plat->x = 270.0f;
-    plat->y = 560.0f;
-    plat->larg = 100.0f;
-
-    bola->x = plat->x + plat->larg / 2.0f;
-    bola->y = plat->y - RAIOBOLA;
-    bola->dx = 3.0f;
-    bola->dy = -3.0f;
-    bola->ativa = 0;
-
-    InicializaTijolosArquivo(tijolos, "midias/fase2.txt", 15, 25);
+    PreparaFase(tijolos, plat, bola, faseAtual);
 }
 
 int main(void) {
@@ -76,7 +112,7 @@ CarregaRecursos(&recursos);
     Jogador jogador = {3, 0};
 
     Tijolo tijolos[QTDTIJOLOS]; // array de tijolos
-    InicializaTijolosArquivo(tijolos, "midias/fase2.txt", 15, 25); // inicializa os tijolos do arquivo
+    PreparaFase(tijolos, &plataforma, &bola, faseAtual);
 
     while (!WindowShouldClose()) {
 
@@ -99,12 +135,11 @@ CarregaRecursos(&recursos);
             if (IsKeyPressed(KEY_ENTER)) {
                 switch (selecionada) {
                     case 0:
-                        SalvaJogo(jogador, tijolos, QTDTIJOLOS);
-                        ReinicializaJogo(&jogador, tijolos, &plataforma, &bola, QTDTIJOLOS);
+                        ReinicializaJogo(&jogador, tijolos, &plataforma, &bola);
                         tela = 1;
                         break;
                     case 1:
-                        CarregaJogo(&jogador, tijolos, QTDTIJOLOS);
+                        CarregaJogo(&jogador, tijolos, QTDTIJOLOS, &faseAtual);
                         tela = 1;    
                         break;        
                     case 2:
@@ -127,7 +162,7 @@ CarregaRecursos(&recursos);
     else {
 
     if (IsKeyPressed(KEY_S)) {
-        SalvaJogo(jogador, tijolos, QTDTIJOLOS);
+        SalvaJogo(jogador, tijolos, QTDTIJOLOS, faseAtual);
         tempoMensagemSave = 180;
     }
 
@@ -153,6 +188,15 @@ CarregaRecursos(&recursos);
     }
 
     ColisaoBolaTijolo(&bola, tijolos, QTDTIJOLOS, &jogador);
+
+    if (FaseConcluida(tijolos, QTDTIJOLOS)) {
+        faseAtual++;
+        if (faseAtual > NUM_FASES) {
+            tela = 4;
+        } else {
+            PreparaFase(tijolos, &plataforma, &bola, faseAtual);
+        }
+    }
     }
     }
 
@@ -164,10 +208,15 @@ CarregaRecursos(&recursos);
             &jogador,
             tijolos,
             &plataforma,
-            &bola,
-            QTDTIJOLOS
+            &bola
         );
 
+        tela = 0;
+    }
+}
+    if (tela == 4) {
+
+    if (IsKeyPressed(KEY_ENTER)) {
         tela = 0;
     }
 }
@@ -198,10 +247,16 @@ CarregaRecursos(&recursos);
         DesenhaBola(bola);
         DesenhaJogador(jogador);
         DesenhaTijolos(tijolos, QTDTIJOLOS);
+        DrawText(TextFormat("Fase: %d/%d", faseAtual, NUM_FASES), 450, 10, 20, WHITE);
 
         if (tempoMensagemSave > 0){
             DrawText("JOGO SALVO", 450, 20, 20, WHITE);
         }
+    }
+
+    if (tela == 4) {
+        DrawText("PARABENS! VOCE VENCEU", 80, 220, 50, GREEN);
+        DrawText("PRESSIONE ENTER PARA VOLTAR", 70, 320, 20, WHITE);
     }
 
     if (tela == 2){
