@@ -13,7 +13,6 @@
 #define OPCOES 4
 
 #define QTDTIJOLOS 120
-testeeeee
 
 void DesenhaMenu(int selecionada) {
     char opcoes[OPCOES][20] = {
