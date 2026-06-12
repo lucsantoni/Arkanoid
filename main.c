@@ -136,7 +136,7 @@ CarregaRecursos(&recursos);
                     }
                 }
 
-                MoveBola(&bola, &plataforma);
+                MoveBola(&bola, &plataforma, &jogador);
                 ColisaoBolaTijolo(&bola, tijolos, QTDTIJOLOS, &jogador);
             }
     
