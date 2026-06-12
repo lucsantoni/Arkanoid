@@ -45,4 +45,19 @@ void CarregaJogo(
     int *fase
 );
 
+// Ranking
+#define RANK_MAX 5
+#define RANK_NAME_LEN 32
+
+typedef struct {
+    char nome[RANK_NAME_LEN];
+    int pontos;
+} RankEntry;
+
+void LoadRanking(RankEntry rank[], int max);
+void SaveRanking(RankEntry rank[], int max);
+int QualificaRanking(RankEntry rank[], int max, int pontos);
+void InsereRanking(RankEntry rank[], int max, const char *nome, int pontos);
+void DrawRankingOnScreen(RankEntry rank[], int max, int x, int y);
+
 #endif

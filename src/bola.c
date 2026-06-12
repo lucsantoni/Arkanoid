@@ -27,10 +27,5 @@ void MoveBola(Bola *bola, Plataforma *plat) {
             bola->dx = velocidade * angulo;
             bola->dy = -sqrt(velocidade * velocidade - bola->dx * bola->dx); // mantém a velocidade total constante
         }
-        printf("dx=%.2f dy=%.2f vel=%.2f\n",
-       bola->dx,
-       bola->dy,
-       sqrt(bola->dx * bola->dx + bola->dy * bola->dy));
-
     }
 }

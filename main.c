@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 #include "bola.h"
 #include "plataforma.h"
@@ -94,6 +95,10 @@ void ReinicializaJogo(Jogador *jogador, Tijolo tijolos[], Plataforma *plat, Bola
 
 int main(void) {
 
+    char nomeInput[RANK_NAME_LEN] = "";
+    int nomeLen = 0;
+    int digitandoNome = 0;
+
     InitWindow(LARGURA, ALTURA, "ARKANOID");
 
     InitAudioDevice();
@@ -106,6 +111,9 @@ CarregaRecursos(&recursos);
     int selecionada = 0;
     int tela = 0;
     int tempoMensagemSave = 0;
+    int rankingHandled = 0;
+
+    RankEntry ranking[RANK_MAX];
 
     Plataforma plataforma = {270.0f, 560.0f, 100.0f};
     Bola bola = {320.0f, 550.0f, 3.0f, -3.0f, 0};
@@ -113,6 +121,8 @@ CarregaRecursos(&recursos);
 
     Tijolo tijolos[QTDTIJOLOS]; // array de tijolos
     PreparaFase(tijolos, &plataforma, &bola, faseAtual);
+
+    LoadRanking(ranking, RANK_MAX);
 
     while (!WindowShouldClose()) {
 
@@ -156,6 +166,34 @@ CarregaRecursos(&recursos);
 
     if (tela == 1) {
 
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        printf("Confirmar sair? (S/N): ");
+        int ch = getchar();
+        while (ch == '\n') ch = getchar();
+        int tmp;
+        while ((tmp = getchar()) != '\n' && tmp != EOF);
+        if (ch == 'S' || ch == 's') {
+            DescarregaRecursos(&recursos);
+            CloseAudioDevice();
+            CloseWindow();
+            return 0;
+        }
+    }
+
+    if (IsKeyPressed(KEY_N)) {
+        printf("Confirmar novo jogo? (S/N): ");
+        int ch = getchar();
+        while (ch == '\n') ch = getchar();
+        int tmp;
+        while ((tmp = getchar()) != '\n' && tmp != EOF);
+        if (ch == 'S' || ch == 's') {
+            ReinicializaJogo(&jogador, tijolos, &plataforma, &bola);
+            tela = 1;
+            rankingHandled = 0;
+            continue;
+        }
+    }
+
     if (IsKeyPressed(KEY_P)) {
         tela = 3;
     }
@@ -184,6 +222,7 @@ CarregaRecursos(&recursos);
 
         if (jogador.vidas <= 0) {
             tela = 2;
+            rankingHandled = 0;
         }
     }
 
@@ -193,6 +232,7 @@ CarregaRecursos(&recursos);
         faseAtual++;
         if (faseAtual > NUM_FASES) {
             tela = 4;
+            rankingHandled = 0;
         } else {
             PreparaFase(tijolos, &plataforma, &bola, faseAtual);
         }
@@ -200,23 +240,19 @@ CarregaRecursos(&recursos);
     }
     }
 
-        if (tela == 2){
-
-    if (IsKeyPressed(KEY_ENTER)){
-
-        ReinicializaJogo(
-            &jogador,
-            tijolos,
-            &plataforma,
-            &bola
-        );
-
+  if (tela == 2){
+    if (!digitandoNome && IsKeyPressed(KEY_ENTER)){
+            ReinicializaJogo(
+                &jogador,
+                tijolos,
+                &plataforma,
+                &bola
+            );
         tela = 0;
     }
 }
-    if (tela == 4) {
-
-    if (IsKeyPressed(KEY_ENTER)) {
+if (tela == 4) {
+    if (!digitandoNome && IsKeyPressed(KEY_ENTER)) {
         tela = 0;
     }
 }
@@ -232,6 +268,43 @@ CarregaRecursos(&recursos);
 
 }
     
+if ((tela == 2 || tela == 4) && !rankingHandled) {
+    int idx = QualificaRanking(ranking, RANK_MAX, jogador.pontos);
+    if (idx >= 0) {
+        digitandoNome = 1;
+        nomeLen = 0;
+        nomeInput[0] = '\0';
+    }
+    rankingHandled = 1;
+}
+if (digitandoNome) {
+
+    int key = GetCharPressed();
+
+    while (key > 0) {
+        if ((key >= 32) && (key <= 125) && (nomeLen < RANK_NAME_LEN - 1)) {
+            nomeInput[nomeLen++] = (char)key;
+            nomeInput[nomeLen] = '\0';
+        }
+        key = GetCharPressed();
+    }
+
+    if (IsKeyPressed(KEY_BACKSPACE) && nomeLen > 0) {
+        nomeLen--;
+        nomeInput[nomeLen] = '\0';
+    }
+
+    if (IsKeyPressed(KEY_ENTER)) {
+
+        if (nomeLen == 0)
+            strcpy(nomeInput, "PLAYER");
+
+        InsereRanking(ranking, RANK_MAX, nomeInput, jogador.pontos);
+        SaveRanking(ranking, RANK_MAX);
+
+        digitandoNome = 0;
+    }
+}
     BeginDrawing();
     ClearBackground(BLACK);
 
@@ -256,14 +329,26 @@ CarregaRecursos(&recursos);
 
     if (tela == 4) {
         DrawText("PARABENS! VOCE VENCEU", 80, 220, 50, GREEN);
+        if (digitandoNome) {
+            DrawText("NOVO RECORDE! DIGITE SEU NOME:", 40, 340, 20, YELLOW);
+            DrawText(nomeInput, 200, 380, 30, WHITE);
+        }
         DrawText("PRESSIONE ENTER PARA VOLTAR", 70, 320, 20, WHITE);
+        DrawRankingOnScreen(ranking, RANK_MAX, 160, 380);
     }
 
     if (tela == 2){
 
         DrawText("GAME OVER", 150, 220, 60, RED);
+        if (digitandoNome) {
+            DrawText("NOVO RECORDE! DIGITE SEU NOME:", 40, 380, 20, YELLOW);
+            DrawText(nomeInput, 200, 420, 30, WHITE);
+        }
         DrawText(TextFormat("PONTOS: %d", jogador.pontos), 190, 320, 35, WHITE);
-        DrawText("PRESSIONE ENTER", 140, 420, 30, WHITE);
+        if (!digitandoNome) {
+            DrawText("PRESSIONE ENTER", 140, 420, 30, WHITE);
+        }
+        DrawRankingOnScreen(ranking, RANK_MAX, 160, 460);
 }
 
 if (tela == 3) {

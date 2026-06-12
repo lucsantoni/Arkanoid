@@ -1,6 +1,8 @@
 #include "jogo.h"
 #include <raylib.h>
 #include <stdio.h>
+#include <string.h>
+#include <limits.h>
 
 void DesenhaJogador(Jogador jogador){
     DrawText(TextFormat("Vidas: %d Pontos: %d", jogador.vidas, jogador.pontos), 20, 10, 20, WHITE);
@@ -102,4 +104,77 @@ void PerdeVida(Bola *bola, Plataforma *plat, Jogador *jogador)
 
     bola->x = plat->x + plat->larg / 2.0f;
     bola->y = plat->y - RAIOBOLA;
+}
+
+// Ranking functions
+void LoadRanking(RankEntry rank[], int max) {
+    for (int i = 0; i < max; i++) {
+        rank[i].nome[0] = '\0';
+        rank[i].pontos = 0;
+    }
+
+    FILE *f = fopen("ranking.bin", "rb");
+    if (!f) return;
+
+    fread(rank, sizeof(RankEntry), max, f);
+    fclose(f);
+}
+
+void SaveRanking(RankEntry rank[], int max) {
+    FILE *f = fopen("ranking.bin", "wb");
+    if (!f) return;
+    fwrite(rank, sizeof(RankEntry), max, f);
+    fclose(f);
+}
+
+int QualificaRanking(RankEntry rank[], int max, int pontos) {
+    int lowestIdx = -1;
+    int lowest = INT_MAX;
+    for (int i = 0; i < max; i++) {
+        if (rank[i].pontos == 0) return i; // empty slot
+        if (rank[i].pontos < lowest) {
+            lowest = rank[i].pontos;
+            lowestIdx = i;
+        }
+    }
+    if (pontos > lowest) return lowestIdx;
+    return -1;
+}
+
+void InsereRanking(RankEntry rank[], int max, const char *nome, int pontos) {
+    int pos = max;
+    for (int i = 0; i < max; i++) {
+        if (rank[i].pontos < pontos) {
+            pos = i;
+            break;
+        }
+    }
+    if (pos >= max) {
+        // maybe there's an empty slot
+        for (int i = 0; i < max; i++) {
+            if (rank[i].pontos == 0) { pos = i; break; }
+        }
+    }
+    if (pos >= max) return; // no place
+
+    // shift down
+    for (int i = max - 1; i > pos; i--) {
+        rank[i] = rank[i-1];
+    }
+    // insert
+    strncpy(rank[pos].nome, nome, RANK_NAME_LEN-1);
+    rank[pos].nome[RANK_NAME_LEN-1] = '\0';
+    rank[pos].pontos = pontos;
+}
+
+void DrawRankingOnScreen(RankEntry rank[], int max, int x, int y) {
+    for (int i = 0; i < max; i++) {
+        char line[128];
+        if (rank[i].pontos > 0) {
+            sprintf(line, "%d. %s - %d", i+1, rank[i].nome, rank[i].pontos);
+        } else {
+            sprintf(line, "%d. ---", i+1);
+        }
+        DrawText(line, x, y + i * 24, 20, WHITE);
+    }
 }
