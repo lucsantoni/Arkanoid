@@ -12,12 +12,7 @@
 #define TAMANHO_FONTE 40
 #define OPCOES 4
 
-<<<<<<< HEAD
 #define QTDTIJOLOS 90
-
-=======
-#define QTDTIJOLOS 120
->>>>>>> cb25d6608dbf1d8929848930be32c320082c7847
 
 void DesenhaMenu(int selecionada) {
     char opcoes[OPCOES][20] = {
@@ -58,7 +53,7 @@ void ReinicializaJogo(Jogador *jogador, Tijolo tijolos[], Plataforma *plat, Bola
     bola->dy = -3.0f;
     bola->ativa = 0;
 
-    InicializaTijolosArquivo(tijolos, "midias/fase1.txt", 15, 25);
+    InicializaTijolosArquivo(tijolos, "midias/fase2.txt", 15, 25);
 }
 
 int main(void) {
@@ -81,7 +76,7 @@ CarregaRecursos(&recursos);
     Jogador jogador = {3, 0};
 
     Tijolo tijolos[QTDTIJOLOS]; // array de tijolos
-    InicializaTijolosArquivo(tijolos, "midias/fase1.txt", 15, 25); // inicializa os tijolos do arquivo
+    InicializaTijolosArquivo(tijolos, "midias/fase2.txt", 15, 25); // inicializa os tijolos do arquivo
 
     while (!WindowShouldClose()) {
 
@@ -124,26 +119,69 @@ CarregaRecursos(&recursos);
             }
         }
 
-            if (tela == 1){
-                if (IsKeyPressed(KEY_S)) {
-                    SalvaJogo(jogador, tijolos, QTDTIJOLOS);
-                    tempoMensagemSave = 180;
-                }
+    if (tela == 1) {
 
-                MovePlataforma(&plataforma);
+    if (IsKeyPressed(KEY_P)) {
+        tela = 3;
+    }
+    else {
 
-                if (bola.ativa == 0) {
-                    bola.x = plataforma.x + plataforma.larg / 2.0f;
-                    bola.y = plataforma.y - RAIOBOLA;
+    if (IsKeyPressed(KEY_S)) {
+        SalvaJogo(jogador, tijolos, QTDTIJOLOS);
+        tempoMensagemSave = 180;
+    }
 
-                    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-                        bola.ativa = 1;
-                    }
-                }
+    MovePlataforma(&plataforma);
 
-                MoveBola(&bola, &plataforma, &jogador);
-                ColisaoBolaTijolo(&bola, tijolos, QTDTIJOLOS, &jogador);
-            }
+    if (bola.ativa == 0) {
+        bola.x = plataforma.x + plataforma.larg / 2.0f;
+        bola.y = plataforma.y - RAIOBOLA;
+
+        if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
+            bola.ativa = 1;
+        }
+    }
+
+    MoveBola(&bola, &plataforma);
+
+    if (bola.y > ALTURA) {
+        PerdeVida(&bola, &plataforma, &jogador);
+
+        if (jogador.vidas <= 0) {
+            tela = 2;
+        }
+    }
+
+    ColisaoBolaTijolo(&bola, tijolos, QTDTIJOLOS, &jogador);
+    }
+    }
+
+        if (tela == 2){
+
+    if (IsKeyPressed(KEY_ENTER)){
+
+        ReinicializaJogo(
+            &jogador,
+            tijolos,
+            &plataforma,
+            &bola,
+            QTDTIJOLOS
+        );
+
+        tela = 0;
+    }
+}
+    if (tela == 3) {
+
+    if (IsKeyPressed(KEY_C)) {
+        tela = 1;
+    }
+
+    if (IsKeyPressed(KEY_M)) {
+        tela = 0;
+    }
+
+}
     
     BeginDrawing();
     ClearBackground(BLACK);
@@ -155,7 +193,6 @@ CarregaRecursos(&recursos);
 
     if (tela == 1){
         DrawTexture(recursos.imgJogo, 0, 0, WHITE);
-        DrawFPS(10, 40);
 
         DesenhaPlataforma(plataforma);
         DesenhaBola(bola);
@@ -165,11 +202,30 @@ CarregaRecursos(&recursos);
         if (tempoMensagemSave > 0){
             DrawText("JOGO SALVO", 450, 20, 20, WHITE);
         }
-
-        if (IsKeyPressed(KEY_P)){
-            tela = 0;
-        }
     }
+
+    if (tela == 2){
+
+        DrawText("GAME OVER", 150, 220, 60, RED);
+        DrawText(TextFormat("PONTOS: %d", jogador.pontos), 190, 320, 35, WHITE);
+        DrawText("PRESSIONE ENTER", 140, 420, 30, WHITE);
+}
+
+if (tela == 3) {
+
+    DrawTexture(recursos.imgJogo, 0, 0, WHITE);
+
+    DesenhaPlataforma(plataforma);
+    DesenhaBola(bola);
+    DesenhaJogador(jogador);
+    DesenhaTijolos(tijolos, QTDTIJOLOS);
+
+    DrawRectangle(0, 0, LARGURA, ALTURA, Fade(BLACK, 0.75f));
+
+    DrawText("PAUSADO", 170, 180, 60, WHITE);
+    DrawText("C - CONTINUAR", 110, 300, 30, WHITE);
+    DrawText("M - MENU", 180, 360, 30, WHITE);
+}
 
     EndDrawing();
     }

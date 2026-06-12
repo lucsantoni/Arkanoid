@@ -2,7 +2,6 @@
 #define BOLA_H
 
 #include "plataforma.h"
-#include "jogo.h"
 #include <raylib.h>
 
 #define RAIOBOLA 8
@@ -16,6 +15,6 @@ typedef struct {
 } Bola;
 
 void DesenhaBola(Bola bola);
-void MoveBola(Bola *bola, Plataforma *plat, Jogador *jogador);
+void MoveBola(Bola *bola, Plataforma *plat);
 
 #endif

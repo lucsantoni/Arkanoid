@@ -85,3 +85,19 @@ void DescarregaRecursos(Recursos *rec) {
     UnloadTexture(rec->imgJogo);
     UnloadMusicStream(rec->musica);
 }
+
+void PerdeVida(Bola *bola, Plataforma *plat, Jogador *jogador)
+{
+    jogador->vidas--;
+
+    bola->ativa = 0;
+
+    plat->x = 270.0f;
+    plat->y = 560.0f;
+
+    bola->dx = 3.0f;
+    bola->dy = -3.0f;
+
+    bola->x = plat->x + plat->larg / 2.0f;
+    bola->y = plat->y - RAIOBOLA;
+}

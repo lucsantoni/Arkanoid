@@ -1,7 +1,9 @@
 #ifndef JOGO_H
 #define JOGO_H
 
+#include <raylib.h>
 #include "bola.h"
+#include "plataforma.h"
 #include "tijolo.h"
 
 typedef struct {
@@ -17,6 +19,8 @@ typedef struct {
 
 void CarregaRecursos(Recursos *rec);
 void DescarregaRecursos(Recursos *rec);
+
+void PerdeVida(Bola *bola, Plataforma *plat, Jogador *jogador);
 
 void DesenhaJogador(Jogador jogador);
 
