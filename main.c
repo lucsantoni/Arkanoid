@@ -12,8 +12,12 @@
 #define TAMANHO_FONTE 40
 #define OPCOES 4
 
+<<<<<<< HEAD
 #define QTDTIJOLOS 90
 
+=======
+#define QTDTIJOLOS 120
+>>>>>>> cb25d6608dbf1d8929848930be32c320082c7847
 
 void DesenhaMenu(int selecionada) {
     char opcoes[OPCOES][20] = {
@@ -137,7 +141,7 @@ CarregaRecursos(&recursos);
                     }
                 }
 
-                MoveBola(&bola, &plataforma);
+                MoveBola(&bola, &plataforma, &jogador);
                 ColisaoBolaTijolo(&bola, tijolos, QTDTIJOLOS, &jogador);
             }
     

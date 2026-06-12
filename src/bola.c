@@ -1,4 +1,5 @@
 #include "bola.h"
+#include <stdio.h>
 #include <math.h>
 
 #define ALTURA 660
@@ -7,7 +8,7 @@ void DesenhaBola(Bola bola) {
     DrawCircle(bola.x, bola.y, RAIOBOLA, BLUE);
 }
 
-void MoveBola(Bola *bola, Plataforma *plat) {
+void MoveBola(Bola *bola, Plataforma *plat, Jogador *jogador) {
     if (bola->ativa == 1) { // só move a bola se ela estiver ativa
         bola->x += bola->dx; // move a bola na direção horizontal, add velocidade horizontal
         bola->y += bola->dy; // move a bola na direção vertical, add velocidade vertical
@@ -29,12 +30,24 @@ void MoveBola(Bola *bola, Plataforma *plat) {
         }
 
         if (bola->y > ALTURA) {
-            bola->ativa = 0;
-            plat->x = 270.0f;
-            bola->dx = 3.0f;
-            bola->dy = -3.0f;
-            bola->x = plat->x + plat->larg / 2.0f;
-            bola->y = plat->y - RAIOBOLA;
-        }
+
+    jogador->vidas--;
+
+    bola->ativa = 0;
+
+    plat->x = 270.0f;
+    plat->y = 560.0f;
+
+    bola->dx = 3.0f;
+    bola->dy = -3.0f;
+
+    bola->x = plat->x + plat->larg / 2.0f;
+    bola->y = plat->y - RAIOBOLA;
+
+    if (jogador->vidas <= 0) {
+        jogador->vidas = 0;
+        printf("GAME OVER\n");
+    }
+}
     }
 }
