@@ -21,13 +21,16 @@ void MoveBola(Bola *bola, Plataforma *plat) {
             bola->x >= plat->x && bola->x <= plat->x + plat->larg && bola->dy > 0) { // 
 
             float ponto_colisao = (bola->x - plat->x) / plat->larg;
-            float velocidade = sqrt((bola->dx) * (bola->dx) + (bola->dy) * (bola->dy));
+            float velocidade = 5.0f;
             float angulo = (ponto_colisao - 0.5f) * 2.0f;
 
             bola->dx = velocidade * angulo;
-            bola->dy = -fabs(velocidade * (1 - fabs(angulo)));
-            bola->y = plat->y - RAIOBOLA;
+            bola->dy = -sqrt(velocidade * velocidade - bola->dx * bola->dx); // mantém a velocidade total constante
         }
+        printf("dx=%.2f dy=%.2f vel=%.2f\n",
+       bola->dx,
+       bola->dy,
+       sqrt(bola->dx * bola->dx + bola->dy * bola->dy));
 
     }
 }
