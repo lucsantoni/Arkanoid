@@ -12,8 +12,8 @@
 #define TAMANHO_FONTE 40
 #define OPCOES 4
 
-#define QTDTIJOLOS 120
-testeeeee
+#define QTDTIJOLOS 90
+
 
 void DesenhaMenu(int selecionada) {
     char opcoes[OPCOES][20] = {
