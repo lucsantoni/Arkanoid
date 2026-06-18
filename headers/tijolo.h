@@ -9,6 +9,7 @@ typedef struct {
     int tipo;
     int ativo;
     int vida;
+    int powerup;
 } Tijolo;
 
 int VidaPorTipo(int tipo);

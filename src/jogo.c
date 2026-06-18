@@ -56,17 +56,16 @@ void ColisaoBolaTijolo(BolasGrupo *grupo, Tijolo tijolos[], int quantidade, Joga
                     if (destruido) {
                         int pontosPorTipo[] = {0, 5, 10, 25, 50};
                         jogador->pontos += pontosPorTipo[tipoOriginal];
+                        int powerupTipo = tijolos[i].powerup;
                         tijolos[i].ativo = 0;
+                        tijolos[i].powerup = 0;
 
-                        int chance_powerup = rand() % 100;
-                        if (chance_powerup < 30) {
-                            int tipo_powerup = (rand() % 3) + 1;
-
+                        if (powerupTipo != 0) {
                             for (int p = 0; p < max_powerups; p++) {
                                 if (!powerups[p].ativo) {
                                     powerups[p].x = tijolos[i].x + tijolos[i].larg / 2;
                                     powerups[p].y = tijolos[i].y + tijolos[i].alt / 2;
-                                    powerups[p].tipo = (PowerUpTipo)tipo_powerup;
+                                    powerups[p].tipo = (PowerUpTipo)powerupTipo;
                                     powerups[p].ativo = 1;
                                     break;
                                 }
@@ -155,7 +154,19 @@ void ColetaPowerUp(PowerUp *powerup, BolasGrupo *grupo, Plataforma *plat) {
 
         case POWERUP_EXTRABALLS:
             grupo->extraBallsAtivo = 1;
-            DividirBola(grupo, &grupo->bolas[0]);
+            {
+                Bola *bolaAtiva = NULL;
+                for (int i = 0; i < grupo->quantidade; i++) {
+                    if (grupo->bolas[i].ativa) {
+                        bolaAtiva = &grupo->bolas[i];
+                        break;
+                    }
+                }
+                if (bolaAtiva == NULL) {
+                    bolaAtiva = &grupo->bolas[0];
+                }
+                DividirBola(grupo, bolaAtiva);
+            }
             powerup->ativo = 0;
             break;
 

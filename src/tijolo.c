@@ -1,6 +1,7 @@
 #include "tijolo.h"
 #include <raylib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int VidaPorTipo(int tipo) {
     switch(tipo){
@@ -52,6 +53,12 @@ void InicializaTijolosArquivo(Tijolo t[], const char *arquivo, int colunas, int 
             t[i].tipo = tipo;
             t[i].vida = VidaPorTipo(tipo);
             t[i].ativo = 1;
+            t[i].powerup = 0;
+            if (tipo >= 1 && tipo <= 4) {
+                if ((rand() % 100) < 25) {
+                    t[i].powerup = (rand() % 3) + 1;
+                }
+            }
             i++;
         }
     }

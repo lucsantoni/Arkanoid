@@ -9,28 +9,31 @@ void DesenhaPoweUps(PowerUp powerups[], int quantidade) {
         if (!powerups[i].ativo) continue;
 
         Color cor;
-        char letra;
+        const char *texto;
 
         switch (powerups[i].tipo) {
             case POWERUP_FIREBALL:
                 cor = RED;
-                letra = 'F';
+                texto = "F";
                 break;
             case POWERUP_EXTRABALLS:
                 cor = YELLOW;
-                letra = 'B';
+                texto = "B";
                 break;
             case POWERUP_PLATEXPAND:
                 cor = GREEN;
-                letra = 'P';
+                texto = "P";
                 break;
             default:
                 cor = WHITE;
-                letra = '?';
+                texto = "?";
         }
 
-        DrawCircle(powerups[i].x, powerups[i].y, TAMANHO_POWERUP, cor);
-        DrawText(&letra, powerups[i].x - 3, powerups[i].y - 6, 12, BLACK);
+        DrawCircleGradient((Vector2){powerups[i].x, powerups[i].y}, TAMANHO_POWERUP, Fade(cor, 0.9f), Fade(WHITE, 0.3f));
+        DrawCircleLines(powerups[i].x, powerups[i].y, TAMANHO_POWERUP, WHITE);
+
+        int textWidth = MeasureText(texto, 14);
+        DrawText(texto, (int)(powerups[i].x - textWidth / 2), (int)(powerups[i].y - 7), 14, BLACK);
     }
 }
 

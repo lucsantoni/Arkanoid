@@ -20,20 +20,6 @@
 #define QTDTIJOLOS 90
 #define NUM_FASES 3
 
-static const char *FASES[NUM_FASES] = {
-    "midias/fase1.txt",
-    "midias/fase2.txt",
-    "midias/fase3.txt"
-};
-
-static int faseAtual = 1;
-
-const char *ArquivoFase(int fase) {
-    if (fase < 1) fase = 1;
-    if (fase > NUM_FASES) fase = NUM_FASES;
-    return FASES[fase - 1];
-}
-
 void LimpaTijolos(Tijolo tijolos[], int quantidade) {
     for (int i = 0; i < quantidade; i++) {
         tijolos[i].ativo = 0;
@@ -49,7 +35,7 @@ int FaseConcluida(Tijolo tijolos[], int quantidade) {
     return 1;
 }
 
-void PreparaFase(Tijolo tijolos[], Plataforma *plat, BolasGrupo *grupo, int fase) {
+void PreparaFase(Tijolo tijolos[], Plataforma *plat, BolasGrupo *grupo, const char *arquivoFase) {
     plat->x = 270.0f;
     plat->y = 560.0f;
     plat->larg = LARG_PLATAFORMA_PADRAO;
@@ -68,7 +54,7 @@ void PreparaFase(Tijolo tijolos[], Plataforma *plat, BolasGrupo *grupo, int fase
     grupo->bolaFoiLancada = 0;
 
     LimpaTijolos(tijolos, QTDTIJOLOS);
-    InicializaTijolosArquivo(tijolos, ArquivoFase(fase), 15, 25);
+    InicializaTijolosArquivo(tijolos, arquivoFase, 15, 25);
 }
 
 void DesenhaMenu(int selecionada) {
@@ -96,12 +82,16 @@ void DesenhaMenu(int selecionada) {
     }
 }
 
-void ReinicializaJogo(Jogador *jogador, Tijolo tijolos[], Plataforma *plat, BolasGrupo *grupo) {
+void ReinicializaJogo(Jogador *jogador, Tijolo tijolos[], Plataforma *plat, BolasGrupo *grupo, PowerUp powerups[], int *faseAtual, const char *arquivoFase) {
     jogador->vidas = 3;
     jogador->pontos = 0;
-    faseAtual = 1;
+    *faseAtual = 1;
 
-    PreparaFase(tijolos, plat, grupo, faseAtual);
+    for (int i = 0; i < MAX_POWERUPS; i++) {
+        powerups[i].ativo = 0;
+    }
+
+    PreparaFase(tijolos, plat, grupo, arquivoFase);
 }
 
 int main(void) {
@@ -113,6 +103,7 @@ int main(void) {
     int digitandoNome = 0;
 
     InitWindow(LARGURA, ALTURA, "ARKANOID");
+    SetExitKey(KEY_NULL);
 
     InitAudioDevice();
 
@@ -125,6 +116,13 @@ CarregaRecursos(&recursos);
     int tela = 0;
     int tempoMensagemSave = 0;
     int rankingHandled = 0;
+
+    int faseAtual = 1;
+    const char *FASES[NUM_FASES] = {
+        "midias/fase1.txt",
+        "midias/fase2.txt",
+        "midias/fase3.txt"
+    };
 
     RankEntry ranking[RANK_MAX];
 
@@ -142,7 +140,7 @@ CarregaRecursos(&recursos);
         powerups[i].ativo = 0;
     }
 
-    PreparaFase(tijolos, &plataforma, &grupo, faseAtual);
+    PreparaFase(tijolos, &plataforma, &grupo, FASES[faseAtual - 1]);
 
     LoadRanking(ranking, RANK_MAX);
 
@@ -167,7 +165,7 @@ CarregaRecursos(&recursos);
             if (IsKeyPressed(KEY_ENTER)) {
                 switch (selecionada) {
                     case 0:
-                        ReinicializaJogo(&jogador, tijolos, &plataforma, &grupo);
+                        ReinicializaJogo(&jogador, tijolos, &plataforma, &grupo, powerups, &faseAtual, FASES[0]);
                         tela = 1;
                         break;
                     case 1:
@@ -189,31 +187,16 @@ CarregaRecursos(&recursos);
     if (tela == 1) {
 
     if (IsKeyPressed(KEY_ESCAPE)) {
-        printf("Confirmar sair? (S/N): ");
-        int ch = getchar();
-        while (ch == '\n') ch = getchar();
-        int tmp;
-        while ((tmp = getchar()) != '\n' && tmp != EOF);
-        if (ch == 'S' || ch == 's') {
-            DescarregaRecursos(&recursos);
-            CloseAudioDevice();
-            CloseWindow();
-            return 0;
-        }
+        tela = 0;
+        rankingHandled = 0;
+        continue;
     }
 
     if (IsKeyPressed(KEY_N)) {
-        printf("Confirmar novo jogo? (S/N): ");
-        int ch = getchar();
-        while (ch == '\n') ch = getchar();
-        int tmp;
-        while ((tmp = getchar()) != '\n' && tmp != EOF);
-        if (ch == 'S' || ch == 's') {
-            ReinicializaJogo(&jogador, tijolos, &plataforma, &grupo);
-            tela = 1;
-            rankingHandled = 0;
-            continue;
-        }
+        ReinicializaJogo(&jogador, tijolos, &plataforma, &grupo, powerups, &faseAtual, FASES[0]);
+        tela = 1;
+        rankingHandled = 0;
+        continue;
     }
 
     if (IsKeyPressed(KEY_P)) {
@@ -227,12 +210,16 @@ CarregaRecursos(&recursos);
 
     MovePlataforma(&plataforma);
 
-    if (grupo.quantidade > 0 && grupo.bolas[0].ativa == 0) {
-        grupo.bolas[0].x = plataforma.x + plataforma.larg / 2.0f;
-        grupo.bolas[0].y = plataforma.y - RAIOBOLA;
+    if (grupo.quantidade > 0 && !grupo.bolaFoiLancada) {
+        for (int i = 0; i < grupo.quantidade; i++) {
+            grupo.bolas[i].x = plataforma.x + plataforma.larg / 2.0f;
+            grupo.bolas[i].y = plataforma.y - RAIOBOLA;
+        }
 
         if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-            grupo.bolas[0].ativa = 1;
+            for (int i = 0; i < grupo.quantidade; i++) {
+                grupo.bolas[i].ativa = 1;
+            }
             grupo.bolaFoiLancada = 1;
         }
     }
@@ -281,23 +268,36 @@ CarregaRecursos(&recursos);
             for (int i = 0; i < MAX_POWERUPS; i++) {
                 powerups[i].ativo = 0;
             }
-            PreparaFase(tijolos, &plataforma, &grupo, faseAtual);
+            PreparaFase(tijolos, &plataforma, &grupo, FASES[faseAtual - 1]);
         }
     }
     }
 
   if (tela == 2){
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        tela = 0;
+        rankingHandled = 0;
+        digitandoNome = 0;
+    }
     if (!digitandoNome && IsKeyPressed(KEY_ENTER)){
             ReinicializaJogo(
                 &jogador,
                 tijolos,
                 &plataforma,
-                &grupo
+                &grupo,
+                powerups,
+                &faseAtual,
+                FASES[0]
             );
         tela = 0;
     }
 }
 if (tela == 4) {
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        tela = 0;
+        rankingHandled = 0;
+        digitandoNome = 0;
+    }
     if (!digitandoNome && IsKeyPressed(KEY_ENTER)) {
         tela = 0;
     }
@@ -308,14 +308,14 @@ if (tela == 4) {
         tela = 1;
     }
 
-    if (IsKeyPressed(KEY_M)) {
+    if (IsKeyPressed(KEY_M) || IsKeyPressed(KEY_ESCAPE)) {
         tela = 0;
     }
 
 }
 
 if (tela == 5) {
-    if (IsKeyPressed(KEY_ESCAPE)) {
+    if (IsKeyPressed(KEY_M) || IsKeyPressed(KEY_ESCAPE)) {
         tela = 0;
     }
 }
@@ -437,8 +437,8 @@ if (tela == 5) {
     int rankingTitleX = (LARGURA - MeasureText("RANKING", 50)) / 2;
     DrawText("RANKING", rankingTitleX, 50, 50, YELLOW);
     DrawRankingOnScreen(ranking, RANK_MAX, 120, 150);
-    int backTextX = (LARGURA - MeasureText("PRESSIONE ESC PARA VOLTAR", 20)) / 2;
-    DrawText("PRESSIONE ESC PARA VOLTAR", backTextX, 600, 20, WHITE);
+    int backTextX = (LARGURA - MeasureText("PRESSIONE M PARA VOLTAR", 20)) / 2;
+    DrawText("PRESSIONE M PARA VOLTAR", backTextX, 600, 20, WHITE);
 }
 
     EndDrawing();

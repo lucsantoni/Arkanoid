@@ -5,7 +5,8 @@
 #define ALTURA 660
 
 void DesenhaBola(Bola bola) {
-    DrawCircle(bola.x, bola.y, RAIOBOLA, BLUE);
+    DrawCircleGradient((Vector2){bola.x, bola.y}, RAIOBOLA, SKYBLUE, BLUE);
+    DrawCircleLines(bola.x, bola.y, RAIOBOLA, WHITE);
 }
 
 void MoveBola(Bola *bola, Plataforma *plat) {
@@ -32,7 +33,7 @@ void MoveBola(Bola *bola, Plataforma *plat) {
 
 void DesenhaTodasBolas(BolasGrupo *grupo) {
     for (int i = 0; i < grupo->quantidade; i++) {
-        if (grupo->bolas[i].ativa) {
+        if (grupo->bolas[i].ativa || (!grupo->bolaFoiLancada && i == 0)) {
             DesenhaBola(grupo->bolas[i]);
         }
     }
