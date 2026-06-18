@@ -29,8 +29,8 @@ void DesenhaPoweUps(PowerUp powerups[], int quantidade) {
                 texto = "?";
         }
 
-        DrawCircleGradient((Vector2){powerups[i].x, powerups[i].y}, TAMANHO_POWERUP, Fade(cor, 0.9f), Fade(WHITE, 0.3f));
-        DrawCircleLines(powerups[i].x, powerups[i].y, TAMANHO_POWERUP, WHITE);
+        DrawCircleGradient((int)powerups[i].x, (int)powerups[i].y, TAMANHO_POWERUP, Fade(cor, 0.9f), Fade(WHITE, 0.3f));
+        DrawCircleLines((int)powerups[i].x, (int)powerups[i].y, TAMANHO_POWERUP, WHITE);
 
         int textWidth = MeasureText(texto, 14);
         DrawText(texto, (int)(powerups[i].x - textWidth / 2), (int)(powerups[i].y - 7), 14, BLACK);

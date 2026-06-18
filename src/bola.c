@@ -5,8 +5,8 @@
 #define ALTURA 660
 
 void DesenhaBola(Bola bola) {
-    DrawCircleGradient((Vector2){bola.x, bola.y}, RAIOBOLA, SKYBLUE, BLUE);
-    DrawCircleLines(bola.x, bola.y, RAIOBOLA, WHITE);
+    DrawCircleGradient((int)bola.x, (int)bola.y, RAIOBOLA, SKYBLUE, BLUE);
+    DrawCircleLines((int)bola.x, (int)bola.y, RAIOBOLA, WHITE);
 }
 
 void MoveBola(Bola *bola, Plataforma *plat) {
