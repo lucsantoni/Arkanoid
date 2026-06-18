@@ -380,7 +380,7 @@ if (digitandoNome) {
             DrawText("FIREBALL!", 450, 40, 20, RED);
         }
         if (grupo.extraBallsAtivo > 0) {
-            DrawText("EXTRA BALLS!", 450, 60, 20, YELLOW);
+            DrawText("BOLAS EXTRAS!", 450, 60, 20, YELLOW);
         }
 
         if (tempoMensagemSave > 0){
