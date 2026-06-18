@@ -120,6 +120,7 @@ void PerdeVida(BolasGrupo *grupo, Plataforma *plat, Jogador *jogador)
     grupo->quantidade = 1;
     grupo->bolas[0].ativa = 0;
     grupo->extraBallsAtivo = 0;
+    grupo->bolaFoiLancada = 0;
 
     plat->x = 270.0f;
     plat->y = 560.0f;

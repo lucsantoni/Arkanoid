@@ -21,6 +21,7 @@ typedef struct {
     int fireballAtivo;
     int tempoFireball;
     int extraBallsAtivo;
+    int bolaFoiLancada;
 } BolasGrupo;
 
 void DesenhaBola(Bola bola);

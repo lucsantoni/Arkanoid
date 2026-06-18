@@ -65,6 +65,7 @@ void PreparaFase(Tijolo tijolos[], Plataforma *plat, BolasGrupo *grupo, int fase
     grupo->fireballAtivo = 0;
     grupo->tempoFireball = 0;
     grupo->extraBallsAtivo = 0;
+    grupo->bolaFoiLancada = 0;
 
     LimpaTijolos(tijolos, QTDTIJOLOS);
     InicializaTijolosArquivo(tijolos, ArquivoFase(fase), 15, 25);
@@ -233,35 +234,29 @@ CarregaRecursos(&recursos);
 
         if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
             grupo.bolas[0].ativa = 1;
+            grupo.bolaFoiLancada = 1;
         }
     }
 
     MoveTodaBolas(&grupo, &plataforma);
     MovePoweUps(powerups, MAX_POWERUPS, ALTURA);
 
-    int bolaAtiva = 0;
+    int bolaAindaAtiva = 0;
     for (int i = 0; i < grupo.quantidade; i++) {
         if (grupo.bolas[i].ativa) {
-            bolaAtiva = 1;
+            bolaAindaAtiva = 1;
             if (grupo.bolas[i].y > ALTURA) {
                 grupo.bolas[i].ativa = 0;
             }
         }
     }
 
-    if (!bolaAtiva) {
-        int bolaGrupo = 0;
-        for (int i = 0; i < grupo.quantidade; i++) {
-            if (!grupo.bolas[i].ativa) bolaGrupo++;
-        }
+    if (grupo.bolaFoiLancada && !bolaAindaAtiva) {
+        PerdeVida(&grupo, &plataforma, &jogador);
 
-        if (bolaGrupo >= grupo.quantidade) {
-            PerdeVida(&grupo, &plataforma, &jogador);
-
-            if (jogador.vidas <= 0) {
-                tela = 2;
-                rankingHandled = 0;
-            }
+        if (jogador.vidas <= 0) {
+            tela = 2;
+            rankingHandled = 0;
         }
     }
 
