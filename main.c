@@ -75,7 +75,7 @@ void DesenhaMenu(int selecionada) {
     char opcoes[OPCOES][20] = {
         "NOVO JOGO",
         "CARREGAR JOGO",
-        "OPCOES",
+        "RANKING",
         "SAIR"
     };
 
@@ -175,7 +175,7 @@ CarregaRecursos(&recursos);
                         tela = 1;
                         break;
                     case 2:
-                        printf("Opcoes selecionadas\n");
+                        tela = 5;
                         break;
 
                     case 3:
@@ -314,6 +314,12 @@ if (tela == 4) {
 
 }
 
+if (tela == 5) {
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        tela = 0;
+    }
+}
+
 if ((tela == 2 || tela == 4) && !rankingHandled) {
     int idx = QualificaRanking(ranking, RANK_MAX, jogador.pontos);
     if (idx >= 0) {
@@ -421,6 +427,13 @@ if (tela == 3) {
     DrawText("PAUSADO", 170, 180, 60, WHITE);
     DrawText("C - CONTINUAR", 110, 300, 30, WHITE);
     DrawText("M - MENU", 180, 360, 30, WHITE);
+}
+
+if (tela == 5) {
+    DrawTexture(recursos.imgInicio, 0, 0, WHITE);
+    DrawText("RANKING", 190, 50, 50, YELLOW);
+    DrawRankingOnScreen(ranking, RANK_MAX, 120, 150);
+    DrawText("PRESSIONE ESC PARA VOLTAR", 50, 600, 20, WHITE);
 }
 
     EndDrawing();

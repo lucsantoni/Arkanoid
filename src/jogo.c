@@ -169,17 +169,35 @@ void LoadRanking(RankEntry rank[], int max) {
         rank[i].pontos = 0;
     }
 
-    FILE *f = fopen("ranking.bin", "rb");
-    if (!f) return;
+    FILE *f = fopen("ranking.txt", "r");
+    if (!f) {
+        // Tenta carregar do arquivo binário para migração
+        f = fopen("ranking.bin", "rb");
+        if (!f) return;
+        fread(rank, sizeof(RankEntry), max, f);
+        fclose(f);
+        // Salva em formato texto
+        SaveRanking(rank, max);
+        return;
+    }
 
-    fread(rank, sizeof(RankEntry), max, f);
+    for (int i = 0; i < max; i++) {
+        if (fscanf(f, "%d %31s\n", &rank[i].pontos, rank[i].nome) != 2) {
+            break;
+        }
+    }
     fclose(f);
 }
 
 void SaveRanking(RankEntry rank[], int max) {
-    FILE *f = fopen("ranking.bin", "wb");
+    FILE *f = fopen("ranking.txt", "w");
     if (!f) return;
-    fwrite(rank, sizeof(RankEntry), max, f);
+
+    for (int i = 0; i < max; i++) {
+        if (rank[i].nome[0] != '\0') {
+            fprintf(f, "%d %s\n", rank[i].pontos, rank[i].nome);
+        }
+    }
     fclose(f);
 }
 
