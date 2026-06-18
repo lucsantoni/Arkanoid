@@ -219,7 +219,6 @@ CarregaRecursos(&recursos);
     if (IsKeyPressed(KEY_P)) {
         tela = 3;
     }
-    else {
 
     if (IsKeyPressed(KEY_S)) {
         SalvaJogo(jogador, tijolos, QTDTIJOLOS, faseAtual);
@@ -264,11 +263,10 @@ CarregaRecursos(&recursos);
 
     for (int i = 0; i < MAX_POWERUPS; i++) {
         if (powerups[i].ativo) {
-            float dx = powerups[i].x - plataforma.x;
-            float dy = powerups[i].y - plataforma.y;
-            float distancia = sqrt(dx*dx + dy*dy);
-
-            if (distancia < 40) {
+            if (powerups[i].x >= plataforma.x - 15 &&
+                powerups[i].x <= plataforma.x + plataforma.larg + 15 &&
+                powerups[i].y >= plataforma.y - 15 &&
+                powerups[i].y <= plataforma.y + ALTPLATAFORMA + 15) {
                 ColetaPowerUp(&powerups[i], &grupo, &plataforma);
             }
         }
@@ -285,7 +283,6 @@ CarregaRecursos(&recursos);
             }
             PreparaFase(tijolos, &plataforma, &grupo, faseAtual);
         }
-    }
     }
     }
 
