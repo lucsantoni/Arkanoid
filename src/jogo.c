@@ -23,14 +23,24 @@ void ColisaoBolaTijolo(BolasGrupo *grupo, Tijolo tijolos[], int quantidade, Joga
             if(nextX + RAIOBOLA > tijolos[i].x && nextX - RAIOBOLA < tijolos[i].x + tijolos[i].larg &&
                nextY + RAIOBOLA > tijolos[i].y && nextY - RAIOBOLA < tijolos[i].y + tijolos[i].alt){
 
+                int tipoOriginal = tijolos[i].tipo;
                 int colVertical = 0;
                 if(bola->x < tijolos[i].x || bola->x > tijolos[i].x + tijolos[i].larg)
                     colVertical = 1;
 
-                if(colVertical)
+                if(colVertical) {
                     bola->dx = -bola->dx;
-                else
+                    if(bola->x < tijolos[i].x + tijolos[i].larg / 2)
+                        bola->x = tijolos[i].x - RAIOBOLA;
+                    else
+                        bola->x = tijolos[i].x + tijolos[i].larg + RAIOBOLA;
+                } else {
                     bola->dy = -bola->dy;
+                    if(bola->y < tijolos[i].y + tijolos[i].alt / 2)
+                        bola->y = tijolos[i].y - RAIOBOLA;
+                    else
+                        bola->y = tijolos[i].y + tijolos[i].alt + RAIOBOLA;
+                }
 
                 if(tijolos[i].tipo != 5) {
                     int destruido = 0;
@@ -44,7 +54,8 @@ void ColisaoBolaTijolo(BolasGrupo *grupo, Tijolo tijolos[], int quantidade, Joga
                     }
 
                     if (destruido) {
-                        jogador->pontos += 10;
+                        int pontosPorTipo[] = {0, 5, 10, 25, 50};
+                        jogador->pontos += pontosPorTipo[tipoOriginal];
                         tijolos[i].ativo = 0;
 
                         int chance_powerup = rand() % 100;

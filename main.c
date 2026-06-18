@@ -384,7 +384,7 @@ if (digitandoNome) {
         }
 
         if (tempoMensagemSave > 0){
-            DrawText("JOGO SALVO", 450, 20, 20, WHITE);
+            DrawText("JOGO SALVO", 200, 600, 20, GREEN);
         }
     }
 
@@ -424,16 +424,21 @@ if (tela == 3) {
 
     DrawRectangle(0, 0, LARGURA, ALTURA, Fade(BLACK, 0.75f));
 
-    DrawText("PAUSADO", 170, 180, 60, WHITE);
-    DrawText("C - CONTINUAR", 110, 300, 30, WHITE);
-    DrawText("M - MENU", 180, 360, 30, WHITE);
+    int pausadoX = (LARGURA - MeasureText("PAUSADO", 60)) / 2;
+    DrawText("PAUSADO", pausadoX, 180, 60, WHITE);
+    int continueX = (LARGURA - MeasureText("C - CONTINUAR", 30)) / 2;
+    DrawText("C - CONTINUAR", continueX, 300, 30, WHITE);
+    int menuX = (LARGURA - MeasureText("M - MENU", 30)) / 2;
+    DrawText("M - MENU", menuX, 360, 30, WHITE);
 }
 
 if (tela == 5) {
     DrawTexture(recursos.imgInicio, 0, 0, WHITE);
-    DrawText("RANKING", 190, 50, 50, YELLOW);
+    int rankingTitleX = (LARGURA - MeasureText("RANKING", 50)) / 2;
+    DrawText("RANKING", rankingTitleX, 50, 50, YELLOW);
     DrawRankingOnScreen(ranking, RANK_MAX, 120, 150);
-    DrawText("PRESSIONE ESC PARA VOLTAR", 50, 600, 20, WHITE);
+    int backTextX = (LARGURA - MeasureText("PRESSIONE ESC PARA VOLTAR", 20)) / 2;
+    DrawText("PRESSIONE ESC PARA VOLTAR", backTextX, 600, 20, WHITE);
 }
 
     EndDrawing();
