@@ -5,6 +5,7 @@
 #include "bola.h"
 #include "plataforma.h"
 #include "tijolo.h"
+#include "powerup.h"
 
 typedef struct {
     int vidas;
@@ -20,16 +21,20 @@ typedef struct {
 void CarregaRecursos(Recursos *rec);
 void DescarregaRecursos(Recursos *rec);
 
-void PerdeVida(Bola *bola, Plataforma *plat, Jogador *jogador);
+void PerdeVida(BolasGrupo *grupo, Plataforma *plat, Jogador *jogador);
 
 void DesenhaJogador(Jogador jogador);
 
 void ColisaoBolaTijolo(
-    Bola *bola,
+    BolasGrupo *grupo,
     Tijolo tijolos[],
     int quantidade,
-    Jogador *jogador
+    Jogador *jogador,
+    PowerUp powerups[],
+    int max_powerups
 );
+
+void ColetaPowerUp(PowerUp *powerup, BolasGrupo *grupo, Plataforma *plat);
 
 void SalvaJogo(
     Jogador jogador,

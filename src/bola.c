@@ -18,7 +18,7 @@ void MoveBola(Bola *bola, Plataforma *plat) {
 
 
         if (bola->y + RAIOBOLA >= plat->y && bola->y + RAIOBOLA <= plat->y + ALTPLATAFORMA && // verifica se a bola está na altura da plataforma
-            bola->x >= plat->x && bola->x <= plat->x + plat->larg && bola->dy > 0) { // 
+            bola->x >= plat->x && bola->x <= plat->x + plat->larg && bola->dy > 0) { //
 
             float ponto_colisao = (bola->x - plat->x) / plat->larg;
             float velocidade = 5.0f;
@@ -28,4 +28,45 @@ void MoveBola(Bola *bola, Plataforma *plat) {
             bola->dy = -sqrt(velocidade * velocidade - bola->dx * bola->dx); // mantém a velocidade total constante
         }
     }
+}
+
+void DesenhaTodasBolas(BolasGrupo *grupo) {
+    for (int i = 0; i < grupo->quantidade; i++) {
+        if (grupo->bolas[i].ativa) {
+            DesenhaBola(grupo->bolas[i]);
+        }
+    }
+}
+
+void MoveTodaBolas(BolasGrupo *grupo, Plataforma *plat) {
+    for (int i = 0; i < grupo->quantidade; i++) {
+        if (grupo->bolas[i].ativa) {
+            MoveBola(&grupo->bolas[i], plat);
+        }
+    }
+
+    if (grupo->fireballAtivo > 0) {
+        grupo->tempoFireball--;
+        if (grupo->tempoFireball <= 0) {
+            grupo->fireballAtivo = 0;
+        }
+    }
+}
+
+void DividirBola(BolasGrupo *grupo, Bola *bola) {
+    if (grupo->quantidade >= MAX_BOLAS - 2) return;
+
+    Bola b1 = *bola;
+    Bola b2 = *bola;
+
+    b1.dx = -3.0f;
+    b1.dy = -3.0f;
+
+    b2.dx = 3.0f;
+    b2.dy = -3.0f;
+
+    grupo->bolas[grupo->quantidade] = b1;
+    grupo->quantidade++;
+    grupo->bolas[grupo->quantidade] = b2;
+    grupo->quantidade++;
 }

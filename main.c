@@ -2,16 +2,20 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "bola.h"
 #include "plataforma.h"
 #include "tijolo.h"
 #include "jogo.h"
+#include "powerup.h"
 
 #define ALTURA 660
 #define LARGURA 640
 #define TAMANHO_FONTE 40
 #define OPCOES 4
+#define MAX_POWERUPS 30
 
 #define QTDTIJOLOS 90
 #define NUM_FASES 3
@@ -45,16 +49,22 @@ int FaseConcluida(Tijolo tijolos[], int quantidade) {
     return 1;
 }
 
-void PreparaFase(Tijolo tijolos[], Plataforma *plat, Bola *bola, int fase) {
+void PreparaFase(Tijolo tijolos[], Plataforma *plat, BolasGrupo *grupo, int fase) {
     plat->x = 270.0f;
     plat->y = 560.0f;
-    plat->larg = 100.0f;
+    plat->larg = LARG_PLATAFORMA_PADRAO;
+    plat->larg_original = LARG_PLATAFORMA_PADRAO;
+    plat->expandida = 0;
 
-    bola->x = plat->x + plat->larg / 2.0f;
-    bola->y = plat->y - RAIOBOLA;
-    bola->dx = 3.0f;
-    bola->dy = -3.0f;
-    bola->ativa = 0;
+    grupo->quantidade = 1;
+    grupo->bolas[0].x = plat->x + plat->larg / 2.0f;
+    grupo->bolas[0].y = plat->y - RAIOBOLA;
+    grupo->bolas[0].dx = 3.0f;
+    grupo->bolas[0].dy = -3.0f;
+    grupo->bolas[0].ativa = 0;
+    grupo->fireballAtivo = 0;
+    grupo->tempoFireball = 0;
+    grupo->extraBallsAtivo = 0;
 
     LimpaTijolos(tijolos, QTDTIJOLOS);
     InicializaTijolosArquivo(tijolos, ArquivoFase(fase), 15, 25);
@@ -70,13 +80,13 @@ void DesenhaMenu(int selecionada) {
 
     int espacamento = 75;
     int yinicial = 220;
-    
+
     for (int i = 0; i < OPCOES; i++) {
         char texto[30];
         if (i == selecionada) {
-            sprintf(texto, "[ %s ]", opcoes[i]); //coloca [] pra destacar a op selecionada
+            sprintf(texto, "[ %s ]", opcoes[i]);
         } else {
-            sprintf(texto, "%s", opcoes[i]); //deixa as outras sem destaque
+            sprintf(texto, "%s", opcoes[i]);
         }
         int larguratexto = MeasureText(texto, TAMANHO_FONTE);
         int x = (LARGURA - larguratexto) / 2;
@@ -85,15 +95,17 @@ void DesenhaMenu(int selecionada) {
     }
 }
 
-void ReinicializaJogo(Jogador *jogador, Tijolo tijolos[], Plataforma *plat, Bola *bola) {
+void ReinicializaJogo(Jogador *jogador, Tijolo tijolos[], Plataforma *plat, BolasGrupo *grupo) {
     jogador->vidas = 3;
     jogador->pontos = 0;
     faseAtual = 1;
 
-    PreparaFase(tijolos, plat, bola, faseAtual);
+    PreparaFase(tijolos, plat, grupo, faseAtual);
 }
 
 int main(void) {
+
+    srand((unsigned int)time(NULL));
 
     char nomeInput[RANK_NAME_LEN] = "";
     int nomeLen = 0;
@@ -115,12 +127,21 @@ CarregaRecursos(&recursos);
 
     RankEntry ranking[RANK_MAX];
 
-    Plataforma plataforma = {270.0f, 560.0f, 100.0f};
-    Bola bola = {320.0f, 550.0f, 3.0f, -3.0f, 0};
+    Plataforma plataforma = {270.0f, 560.0f, LARG_PLATAFORMA_PADRAO, LARG_PLATAFORMA_PADRAO, 0};
+    BolasGrupo grupo = {0};
+    grupo.quantidade = 1;
+    grupo.bolas[0] = (Bola){320.0f, 550.0f, 3.0f, -3.0f, 0};
+
     Jogador jogador = {3, 0};
 
-    Tijolo tijolos[QTDTIJOLOS]; // array de tijolos
-    PreparaFase(tijolos, &plataforma, &bola, faseAtual);
+    Tijolo tijolos[QTDTIJOLOS];
+    PowerUp powerups[MAX_POWERUPS];
+
+    for (int i = 0; i < MAX_POWERUPS; i++) {
+        powerups[i].ativo = 0;
+    }
+
+    PreparaFase(tijolos, &plataforma, &grupo, faseAtual);
 
     LoadRanking(ranking, RANK_MAX);
 
@@ -145,17 +166,17 @@ CarregaRecursos(&recursos);
             if (IsKeyPressed(KEY_ENTER)) {
                 switch (selecionada) {
                     case 0:
-                        ReinicializaJogo(&jogador, tijolos, &plataforma, &bola);
+                        ReinicializaJogo(&jogador, tijolos, &plataforma, &grupo);
                         tela = 1;
                         break;
                     case 1:
                         CarregaJogo(&jogador, tijolos, QTDTIJOLOS, &faseAtual);
-                        tela = 1;    
-                        break;        
+                        tela = 1;
+                        break;
                     case 2:
                         printf("Opcoes selecionadas\n");
                         break;
-                        
+
                     case 3:
                         printf("Saindo do jogo...\n");
                         CloseWindow();
@@ -187,7 +208,7 @@ CarregaRecursos(&recursos);
         int tmp;
         while ((tmp = getchar()) != '\n' && tmp != EOF);
         if (ch == 'S' || ch == 's') {
-            ReinicializaJogo(&jogador, tijolos, &plataforma, &bola);
+            ReinicializaJogo(&jogador, tijolos, &plataforma, &grupo);
             tela = 1;
             rankingHandled = 0;
             continue;
@@ -206,27 +227,57 @@ CarregaRecursos(&recursos);
 
     MovePlataforma(&plataforma);
 
-    if (bola.ativa == 0) {
-        bola.x = plataforma.x + plataforma.larg / 2.0f;
-        bola.y = plataforma.y - RAIOBOLA;
+    if (grupo.quantidade > 0 && grupo.bolas[0].ativa == 0) {
+        grupo.bolas[0].x = plataforma.x + plataforma.larg / 2.0f;
+        grupo.bolas[0].y = plataforma.y - RAIOBOLA;
 
         if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-            bola.ativa = 1;
+            grupo.bolas[0].ativa = 1;
         }
     }
 
-    MoveBola(&bola, &plataforma);
+    MoveTodaBolas(&grupo, &plataforma);
+    MovePoweUps(powerups, MAX_POWERUPS, ALTURA);
 
-    if (bola.y > ALTURA) {
-        PerdeVida(&bola, &plataforma, &jogador);
-
-        if (jogador.vidas <= 0) {
-            tela = 2;
-            rankingHandled = 0;
+    int bolaAtiva = 0;
+    for (int i = 0; i < grupo.quantidade; i++) {
+        if (grupo.bolas[i].ativa) {
+            bolaAtiva = 1;
+            if (grupo.bolas[i].y > ALTURA) {
+                grupo.bolas[i].ativa = 0;
+            }
         }
     }
 
-    ColisaoBolaTijolo(&bola, tijolos, QTDTIJOLOS, &jogador);
+    if (!bolaAtiva) {
+        int bolaGrupo = 0;
+        for (int i = 0; i < grupo.quantidade; i++) {
+            if (!grupo.bolas[i].ativa) bolaGrupo++;
+        }
+
+        if (bolaGrupo >= grupo.quantidade) {
+            PerdeVida(&grupo, &plataforma, &jogador);
+
+            if (jogador.vidas <= 0) {
+                tela = 2;
+                rankingHandled = 0;
+            }
+        }
+    }
+
+    ColisaoBolaTijolo(&grupo, tijolos, QTDTIJOLOS, &jogador, powerups, MAX_POWERUPS);
+
+    for (int i = 0; i < MAX_POWERUPS; i++) {
+        if (powerups[i].ativo) {
+            float dx = powerups[i].x - plataforma.x;
+            float dy = powerups[i].y - plataforma.y;
+            float distancia = sqrt(dx*dx + dy*dy);
+
+            if (distancia < 40) {
+                ColetaPowerUp(&powerups[i], &grupo, &plataforma);
+            }
+        }
+    }
 
     if (FaseConcluida(tijolos, QTDTIJOLOS)) {
         faseAtual++;
@@ -234,7 +285,10 @@ CarregaRecursos(&recursos);
             tela = 4;
             rankingHandled = 0;
         } else {
-            PreparaFase(tijolos, &plataforma, &bola, faseAtual);
+            for (int i = 0; i < MAX_POWERUPS; i++) {
+                powerups[i].ativo = 0;
+            }
+            PreparaFase(tijolos, &plataforma, &grupo, faseAtual);
         }
     }
     }
@@ -246,7 +300,7 @@ CarregaRecursos(&recursos);
                 &jogador,
                 tijolos,
                 &plataforma,
-                &bola
+                &grupo
             );
         tela = 0;
     }
@@ -267,7 +321,7 @@ if (tela == 4) {
     }
 
 }
-    
+
 if ((tela == 2 || tela == 4) && !rankingHandled) {
     int idx = QualificaRanking(ranking, RANK_MAX, jogador.pontos);
     if (idx >= 0) {
@@ -317,10 +371,19 @@ if (digitandoNome) {
         DrawTexture(recursos.imgJogo, 0, 0, WHITE);
 
         DesenhaPlataforma(plataforma);
-        DesenhaBola(bola);
+        DesenhaTodasBolas(&grupo);
         DesenhaJogador(jogador);
         DesenhaTijolos(tijolos, QTDTIJOLOS);
+        DesenhaPoweUps(powerups, MAX_POWERUPS);
+
         DrawText(TextFormat("Fase: %d/%d", faseAtual, NUM_FASES), 450, 10, 20, WHITE);
+
+        if (grupo.fireballAtivo > 0) {
+            DrawText("FIREBALL!", 450, 40, 20, RED);
+        }
+        if (grupo.extraBallsAtivo > 0) {
+            DrawText("EXTRA BALLS!", 450, 60, 20, YELLOW);
+        }
 
         if (tempoMensagemSave > 0){
             DrawText("JOGO SALVO", 450, 20, 20, WHITE);
@@ -356,9 +419,10 @@ if (tela == 3) {
     DrawTexture(recursos.imgJogo, 0, 0, WHITE);
 
     DesenhaPlataforma(plataforma);
-    DesenhaBola(bola);
+    DesenhaTodasBolas(&grupo);
     DesenhaJogador(jogador);
     DesenhaTijolos(tijolos, QTDTIJOLOS);
+    DesenhaPoweUps(powerups, MAX_POWERUPS);
 
     DrawRectangle(0, 0, LARGURA, ALTURA, Fade(BLACK, 0.75f));
 
@@ -369,7 +433,7 @@ if (tela == 3) {
 
     EndDrawing();
     }
-    
+
     DescarregaRecursos(&recursos);
     CloseAudioDevice();
     CloseWindow();

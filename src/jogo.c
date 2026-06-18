@@ -3,47 +3,70 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <stdlib.h>
+#include <time.h>
 
 void DesenhaJogador(Jogador jogador){
     DrawText(TextFormat("Vidas: %d Pontos: %d", jogador.vidas, jogador.pontos), 20, 10, 20, WHITE);
 }
 
+void ColisaoBolaTijolo(BolasGrupo *grupo, Tijolo tijolos[], int quantidade, Jogador *jogador, PowerUp powerups[], int max_powerups) {
+    for (int j = 0; j < grupo->quantidade; j++) {
+        Bola *bola = &grupo->bolas[j];
+        if (!bola->ativa) continue;
 
-void ColisaoBolaTijolo(Bola *bola, Tijolo tijolos[], int quantidade, Jogador *jogador) {
-    for (int i = 0; i < quantidade; i++) {
-        if (!tijolos[i].ativo) continue;
+        for (int i = 0; i < quantidade; i++) {
+            if (!tijolos[i].ativo) continue;
 
-        float nextX = bola->x + bola->dx;
-        float nextY = bola->y + bola->dy;
-        if(nextX + RAIOBOLA > tijolos[i].x && nextX - RAIOBOLA < tijolos[i].x + tijolos[i].larg &&
-           nextY + RAIOBOLA > tijolos[i].y && nextY - RAIOBOLA < tijolos[i].y + tijolos[i].alt){
+            float nextX = bola->x + bola->dx;
+            float nextY = bola->y + bola->dy;
+            if(nextX + RAIOBOLA > tijolos[i].x && nextX - RAIOBOLA < tijolos[i].x + tijolos[i].larg &&
+               nextY + RAIOBOLA > tijolos[i].y && nextY - RAIOBOLA < tijolos[i].y + tijolos[i].alt){
 
-            int colVertical = 0;
-            if(bola->x < tijolos[i].x || bola->x > tijolos[i].x + tijolos[i].larg)
-                colVertical = 1;
+                int colVertical = 0;
+                if(bola->x < tijolos[i].x || bola->x > tijolos[i].x + tijolos[i].larg)
+                    colVertical = 1;
 
-            if(colVertical)
-                bola->dx = -bola->dx;
-            else
-                bola->dy = -bola->dy;
+                if(colVertical)
+                    bola->dx = -bola->dx;
+                else
+                    bola->dy = -bola->dy;
 
-            if(tijolos[i].tipo != 5)
-{
-    if(tijolos[i].tipo > 1)
-    {
-        tijolos[i].tipo--;
-        tijolos[i].vida = tijolos[i].tipo;
-    }
-    else
-    {
-        tijolos[i].ativo = 0;
-        jogador->pontos += 10;
-    }
-}
+                if(tijolos[i].tipo != 5) {
+                    int destruido = 0;
+                    if (grupo->fireballAtivo > 0) {
+                        destruido = 1;
+                    } else if(tijolos[i].tipo > 1) {
+                        tijolos[i].tipo--;
+                        tijolos[i].vida = tijolos[i].tipo;
+                    } else {
+                        destruido = 1;
+                    }
+
+                    if (destruido) {
+                        jogador->pontos += 10;
+                        tijolos[i].ativo = 0;
+
+                        int chance_powerup = rand() % 100;
+                        if (chance_powerup < 30) {
+                            int tipo_powerup = (rand() % 3) + 1;
+
+                            for (int p = 0; p < max_powerups; p++) {
+                                if (!powerups[p].ativo) {
+                                    powerups[p].x = tijolos[i].x + tijolos[i].larg / 2;
+                                    powerups[p].y = tijolos[i].y + tijolos[i].alt / 2;
+                                    powerups[p].tipo = (PowerUpTipo)tipo_powerup;
+                                    powerups[p].ativo = 1;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
-
 
 void SalvaJogo(Jogador jogador, Tijolo tijolos[], int quantidade, int fase) {
     FILE *arq = fopen("save.bin", "wb");
@@ -90,20 +113,52 @@ void DescarregaRecursos(Recursos *rec) {
     UnloadMusicStream(rec->musica);
 }
 
-void PerdeVida(Bola *bola, Plataforma *plat, Jogador *jogador)
+void PerdeVida(BolasGrupo *grupo, Plataforma *plat, Jogador *jogador)
 {
     jogador->vidas--;
 
-    bola->ativa = 0;
+    grupo->quantidade = 1;
+    grupo->bolas[0].ativa = 0;
+    grupo->extraBallsAtivo = 0;
 
     plat->x = 270.0f;
     plat->y = 560.0f;
 
-    bola->dx = 3.0f;
-    bola->dy = -3.0f;
+    grupo->bolas[0].dx = 3.0f;
+    grupo->bolas[0].dy = -3.0f;
 
-    bola->x = plat->x + plat->larg / 2.0f;
-    bola->y = plat->y - RAIOBOLA;
+    grupo->bolas[0].x = plat->x + plat->larg / 2.0f;
+    grupo->bolas[0].y = plat->y - RAIOBOLA;
+}
+
+void ColetaPowerUp(PowerUp *powerup, BolasGrupo *grupo, Plataforma *plat) {
+    if (!powerup->ativo) return;
+
+    switch (powerup->tipo) {
+        case POWERUP_FIREBALL:
+            grupo->fireballAtivo = 1;
+            grupo->tempoFireball = 600;
+            powerup->ativo = 0;
+            break;
+
+        case POWERUP_EXTRABALLS:
+            grupo->extraBallsAtivo = 1;
+            DividirBola(grupo, &grupo->bolas[0]);
+            powerup->ativo = 0;
+            break;
+
+        case POWERUP_PLATEXPAND:
+            if (!plat->expandida) {
+                plat->larg_original = plat->larg;
+                plat->larg *= 2.0f;
+                plat->expandida = 1;
+            }
+            powerup->ativo = 0;
+            break;
+
+        default:
+            powerup->ativo = 0;
+    }
 }
 
 // Ranking functions
