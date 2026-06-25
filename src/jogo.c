@@ -54,11 +54,11 @@ void ColisaoBolaTijolo(BolasGrupo *grupo, Tijolo tijolos[], int quantidade, Joga
                     }
 
                     if (destruido) {
-                        int pontosPorTipo[] = {0, 5, 10, 25, 50};
-                        jogador->pontos += pontosPorTipo[tipoOriginal];
-                        int powerupTipo = tijolos[i].powerup;
-                        tijolos[i].ativo = 0;
-                        tijolos[i].powerup = 0;
+                        int pontosPorTipo[] = {0, 5, 10, 25, 50}; // Pontos por tipo de tijolo
+                        jogador->pontos += pontosPorTipo[tipoOriginal]; // Adiciona pontos ao jogador com base no tipo original do tijolo
+                        int powerupTipo = tijolos[i].powerup; // Armazena o tipo de power-up antes de desativar o tijolo
+                        tijolos[i].ativo = 0; // Desativa o tijolo
+                        tijolos[i].powerup = 0; // Remove o power-up do tijolo desativado
 
                         if (powerupTipo != 0) {
                             for (int p = 0; p < max_powerups; p++) {
@@ -184,7 +184,6 @@ void ColetaPowerUp(PowerUp *powerup, BolasGrupo *grupo, Plataforma *plat) {
     }
 }
 
-// Ranking functions
 void LoadRanking(RankEntry rank[], int max) {
     for (int i = 0; i < max; i++) {
         rank[i].nome[0] = '\0';

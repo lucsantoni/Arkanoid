@@ -19,11 +19,11 @@ void MoveBola(Bola *bola, Plataforma *plat) {
 
 
         if (bola->y + RAIOBOLA >= plat->y && bola->y + RAIOBOLA <= plat->y + ALTPLATAFORMA && // verifica se a bola está na altura da plataforma
-            bola->x >= plat->x && bola->x <= plat->x + plat->larg && bola->dy > 0) { //
+            bola->x >= plat->x && bola->x <= plat->x + plat->larg && bola->dy > 0) { 
 
-            float ponto_colisao = (bola->x - plat->x) / plat->larg;
-            float velocidade = 5.0f;
-            float angulo = (ponto_colisao - 0.5f) * 2.0f;
+            float ponto_colisao = (bola->x - plat->x) / plat->larg; // calcula o ponto de colisão na plataforma
+            float velocidade = 5.0f; // define a velocidade da bola
+            float angulo = (ponto_colisao - 0.5f) * 2.0f; // calcula o ângulo de reflexão com base no ponto de colisão (0.5 é o centro da plataforma)
 
             bola->dx = velocidade * angulo;
             bola->dy = -sqrt(velocidade * velocidade - bola->dx * bola->dx); // mantém a velocidade total constante
