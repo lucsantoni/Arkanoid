@@ -9,6 +9,10 @@ void DesenhaBola(Bola bola) {
     DrawCircleLines((int)bola.x, (int)bola.y, RAIOBOLA, WHITE);
 }
 
+/* Trecho com auxílio de IA (ChatGPT).
+   Ângulo de rebote variável na plataforma.
+   Ver Apêndice A, Prompt #1. */
+
 void MoveBola(Bola *bola, Plataforma *plat) {
     if (bola->ativa == 1) { // só move a bola se ela estiver ativa
         bola->x += bola->dx; // move a bola na direção horizontal, add velocidade horizontal
@@ -54,6 +58,9 @@ void MoveTodaBolas(BolasGrupo *grupo, Plataforma *plat) {
     }
 }
 
+/* Trecho com auxílio de IA (Claude/ChatGPT).
+   Divisão da bola para o power-up de bolas extras.
+   Ver Apêndice A, Prompt #2. */
 void DividirBola(BolasGrupo *grupo, Bola *bola) {
     if (grupo->quantidade >= MAX_BOLAS - 2) return;
 

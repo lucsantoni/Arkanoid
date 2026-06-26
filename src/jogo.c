@@ -10,6 +10,9 @@ void DesenhaJogador(Jogador jogador){
     DrawText(TextFormat("Vidas: %d Pontos: %d", jogador.vidas, jogador.pontos), 20, 10, 20, WHITE);
 }
 
+/* Trecho com auxílio de IA (ChatGPT).
+   Detecção de colisão AABB entre bola e tijolos.
+   Ver Apêndice A, Prompt #1. */
 void ColisaoBolaTijolo(BolasGrupo *grupo, Tijolo tijolos[], int quantidade, Jogador *jogador, PowerUp powerups[], int max_powerups) {
     for (int j = 0; j < grupo->quantidade; j++) {
         Bola *bola = &grupo->bolas[j];
@@ -78,6 +81,9 @@ void ColisaoBolaTijolo(BolasGrupo *grupo, Tijolo tijolos[], int quantidade, Joga
     }
 }
 
+/* Trecho com auxílio de IA (Claude/ChatGPT).
+   Salvamento do estado do jogo em arquivo binário.
+   Ver Apêndice A, Prompt #3. */
 void SalvaJogo(Jogador jogador, Tijolo tijolos[], int quantidade, int fase) {
     FILE *arq = fopen("save.bin", "wb");
 
@@ -142,6 +148,9 @@ void PerdeVida(BolasGrupo *grupo, Plataforma *plat, Jogador *jogador)
     grupo->bolas[0].y = plat->y - RAIOBOLA;
 }
 
+/* Trecho com auxílio de IA (Claude/ChatGPT).
+   Aplicação dos efeitos dos power-ups coletados.
+   Ver Apêndice A, Prompt #2. */
 void ColetaPowerUp(PowerUp *powerup, BolasGrupo *grupo, Plataforma *plat) {
     if (!powerup->ativo) return;
 
@@ -183,6 +192,10 @@ void ColetaPowerUp(PowerUp *powerup, BolasGrupo *grupo, Plataforma *plat) {
             powerup->ativo = 0;
     }
 }
+
+/* Trecho com auxílio de IA (Claude/ChatGPT).
+   Sistema de ranking: leitura, inserção e gravação.
+   Ver Apêndice A, Prompt #4. */
 
 void LoadRanking(RankEntry rank[], int max) {
     for (int i = 0; i < max; i++) {
@@ -226,7 +239,7 @@ int QualificaRanking(RankEntry rank[], int max, int pontos) {
     int lowestIdx = -1;
     int lowest = INT_MAX;
     for (int i = 0; i < max; i++) {
-        if (rank[i].pontos == 0) return i; // empty slot
+        if (rank[i].pontos == 0) return i;
         if (rank[i].pontos < lowest) {
             lowest = rank[i].pontos;
             lowestIdx = i;
@@ -245,18 +258,14 @@ void InsereRanking(RankEntry rank[], int max, const char *nome, int pontos) {
         }
     }
     if (pos >= max) {
-        // maybe there's an empty slot
         for (int i = 0; i < max; i++) {
             if (rank[i].pontos == 0) { pos = i; break; }
         }
     }
-    if (pos >= max) return; // no place
-
-    // shift down
+    if (pos >= max) return; 
     for (int i = max - 1; i > pos; i--) {
         rank[i] = rank[i-1];
     }
-    // insert
     strncpy(rank[pos].nome, nome, RANK_NAME_LEN-1);
     rank[pos].nome[RANK_NAME_LEN-1] = '\0';
     rank[pos].pontos = pontos;

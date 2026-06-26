@@ -320,6 +320,9 @@ if (tela == 5) {
     }
 }
 
+/* Trecho com auxílio de IA (Claude/ChatGPT).
+   Captura de nome do jogador para o ranking.
+   Ver Apêndice A, Prompt #4. */
 if ((tela == 2 || tela == 4) && !rankingHandled) {
     int idx = QualificaRanking(ranking, RANK_MAX, jogador.pontos);
     if (idx >= 0) {
@@ -389,7 +392,7 @@ if (digitandoNome) {
     }
 
     if (tela == 4) {
-        DrawText("PARABENS! VOCE VENCEU", 80, 220, 50, GREEN);
+        DrawText("PARABENS! :)", 80, 220, 50, GREEN);
         if (digitandoNome) {
             DrawText("NOVO RECORDE! DIGITE SEU NOME:", 40, 340, 20, YELLOW);
             DrawText(nomeInput, 200, 380, 30, WHITE);
